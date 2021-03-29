@@ -183,11 +183,12 @@ class GroupedColorFunc(object):
 
     def __call__(self, word, **kwargs):
         return self.get_color_func(word)(word, **kwargs)
+import matplotlib
 def color_by_groups(wc,w2group,cmap = plt.cm.tab20,default_color='grey'):
     groups = set(w2group.values())
     g2color = {}
     for num,g in enumerate(groups):
-        color = '#%02x%02x%02x' % cmap(num/len(groups))
+        color = matplotlib.colors.rgb2hex( cmap(num/len(groups)))
         print(color)
         g2color[g] = color
     color_to_words = {color:[] for g,color in g2color.items()}
