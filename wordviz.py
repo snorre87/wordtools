@@ -98,7 +98,7 @@ class Wordtree():
         return interact(self.display_concordance, word=word
              ,before=widgets.IntSlider(min=0,max=30,step=1,value=5)
              ,after=widgets.IntSlider(min=0,max=30,step=1,value=5),
-            k = widgets.IntSlider(min=0,max=150,step=1,value=25),
+            k = widgets.IntSlider(min=0,max=250,step=1,value=25),
             full=False)
 import ipywidgets as widgets
 from ipywidgets import interact, interact_manual
