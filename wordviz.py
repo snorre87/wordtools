@@ -40,6 +40,7 @@ class Wordtree():
         display(Markdown(string))
 
     def display_concordance(self,word='we',before=5,after=5,k=20,full=False):
+        sentences = []
         if full: #
             print('full')
             n = len(self.tokenized_docs)
@@ -56,6 +57,12 @@ class Wordtree():
         else:
             kwic_data = [[' '.join(words)] for words in self.get_concordance(word,before=before,after=after,k=k)]#[[kwic[i]] for i in range(0,len(kwic))]
             kwic_data = [['Phrases']]+kwic_data #replace "Displaying n of n matches' with header for WordTree - 'Phrases'
+        print()
+        print()
+        print()
+        print('\n'*3)
+
+        print(len(sentences))
         print(len(kwic_data))
 
         js_text_template = Template('''
