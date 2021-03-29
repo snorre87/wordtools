@@ -54,6 +54,7 @@ class Wordtree():
     #kwic = conc.split('\n')#[1:-1]
 
         if full: #
+            print('full')
             n = len(self.tokenized_docs)
             n_words = sum(map(len,self.tokenized_docs))
             av_words = n_words/n
