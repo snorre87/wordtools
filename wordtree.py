@@ -110,7 +110,7 @@ import ipywidgets as widgets
 from ipywidgets import interact, interact_manual
 from ipywidgets import interact, interactive, fixed, interact_manual
 import ipywidgets as widgets
-def interact_wordtree(word='we'):
+def interact_wordtree(wtree,word='we'):
     return interact(wtree.display_concordance, word=word
          ,before=widgets.IntSlider(min=0,max=30,step=1,value=5)
          ,after=widgets.IntSlider(min=0,max=30,step=1,value=5),
