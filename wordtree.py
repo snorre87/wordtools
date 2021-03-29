@@ -106,14 +106,15 @@ class Wordtree():
         #print(js_text)
         #print js_text + html_text
         return HTML(js_text+html_text)
+    def interact_wordtree(self,word='we'):
+        interact(self.display_concordance, word=word
+             ,before=widgets.IntSlider(min=0,max=30,step=1,value=5)
+             ,after=widgets.IntSlider(min=0,max=30,step=1,value=5),
+            k = widgets.IntSlider(min=0,max=150,step=1,value=25),
+            full=False)
 import ipywidgets as widgets
 from ipywidgets import interact, interact_manual
 from ipywidgets import interact, interactive, fixed, interact_manual
 import ipywidgets as widgets
-def interact_wordtree(wtree,word='we'):
-    return interact(wtree.display_concordance, word=word
-         ,before=widgets.IntSlider(min=0,max=30,step=1,value=5)
-         ,after=widgets.IntSlider(min=0,max=30,step=1,value=5),
-        k = widgets.IntSlider(min=0,max=150,step=1,value=25),
-        full=False)
+
 # word cloud
