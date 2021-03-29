@@ -13,7 +13,7 @@ from string import Template
 import random
 class Wordtree():
     def __init__(self,docs,tokenizer=nltk.word_tokenize):
-        self.tokenized_docs = [tokenizer(doc) for doc in docs]
+        self.tokenized_docs = [tokenizer(doc) if type(doc)==str else doc for doc in docs]
         corpus = [word for doc in tokenized_docs for word in doc]
         self.corpus = corpus
         w2idx = {w.lower():[] for w in corpus}
