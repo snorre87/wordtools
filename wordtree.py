@@ -187,7 +187,9 @@ def color_by_groups(wc,w2group,cmap = plt.cm.tab20,default_color='grey'):
     groups = set(w2group.values())
     g2color = {}
     for num,g in enumerate(groups):
-        g2color[g] = '#%02x%02x%02x' % cmap(num/len(groups))
+        color = '#%02x%02x%02x' % cmap(num/len(groups))
+        print(color)
+        g2color[g] = color
     color_to_words = {color:[] for g,color in g2color.items()}
     for w,g in w2group.items():
         color = g2color[g]
