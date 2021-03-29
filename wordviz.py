@@ -57,7 +57,7 @@ class Wordtree():
             n = len(self.tokenized_docs)
             n_words = sum(map(len,self.tokenized_docs))
             av_words = n_words/n
-            sample_size = 10000/av_words
+            sample_size = 50000/av_words
             if n>sample_size:
                 sentences = random.sample(self.tokenized_docs,int(sample_size))
             else:
