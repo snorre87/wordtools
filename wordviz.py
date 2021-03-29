@@ -40,19 +40,6 @@ class Wordtree():
         display(Markdown(string))
 
     def display_concordance(self,word='we',before=5,after=5,k=20,full=False):
-
-
-
-
-
-    #myword = "Athens"
-    #textList.concordance(word, width=100, lines=40)
-    #Turn concordance output into list of lists for WordTree visualisation
-    #conc = (cap.stdout).encode('utf-8')
-    #conc = conc.decode('utf-8')
-    #print(conc)
-    #kwic = conc.split('\n')#[1:-1]
-
         if full: #
             print('full')
             n = len(self.tokenized_docs)
