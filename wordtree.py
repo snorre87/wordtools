@@ -1,4 +1,5 @@
 # wordtree
+import nltk
 from IPython.display import Markdown, display
 from IPython.core.display import HTML
 #Here's the answer to the blankpage issue:
