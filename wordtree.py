@@ -184,7 +184,7 @@ class GroupedColorFunc(object):
     def __call__(self, word, **kwargs):
         return self.get_color_func(word)(word, **kwargs)
 def color_by_groups(wc,w2group,cmap = plt.cm.tab20,default_color='grey'):
-    groups = set(w2group.items())
+    groups = set(w2group.values())
     g2color = {}
     for num,g in enumerate(groups):
         g2color[g] = cmap(num/len(groups))
