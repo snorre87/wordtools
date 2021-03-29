@@ -189,7 +189,7 @@ def color_by_groups(wc,w2group,cmap = plt.cm.tab20,default_color='grey'):
     g2color = {}
     for num,g in enumerate(groups):
         color = matplotlib.colors.rgb2hex( cmap(num/len(groups)))
-        print(color)
+    #    print(color)
         g2color[g] = color
     color_to_words = {color:[] for g,color in g2color.items()}
     for w,g in w2group.items():
