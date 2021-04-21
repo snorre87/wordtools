@@ -192,10 +192,10 @@ def color_by_groups(wc,w2group,cmap = plt.cm.tab20,default_color='grey'):
 # Apply our color function
     wc.recolor(color_func=grouped_color_func)
     # Plot
-    plt.figure()
+    fig = plt.figure()
     plt.imshow(wc, interpolation="bilinear")
     plt.axis("off")
-    return wc
+    return fig 
 def get_wordclod(word_freq=False,text=False,collocations=False):
     if text!=False:
         wc = WordCloud(collocations=False).generate(text.lower())
