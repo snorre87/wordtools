@@ -195,10 +195,10 @@ def color_by_groups(wc,w2group,cmap = plt.cm.tab20,default_color='grey'):
     fig = plt.figure()
     plt.imshow(wc, interpolation="bilinear")
     plt.axis("off")
-    return fig 
-def get_wordclod(word_freq=False,text=False,collocations=False):
+    return fig
+def get_wordclod(word_freq=False,text=False,collocations=False,kwargs={}):
     if text!=False:
-        wc = WordCloud(collocations=False).generate(text.lower())
+        wc = WordCloud(collocations=False,**kwargs).generate(text.lower())
     if word_freq!=False:
-        wc = WordCloud(collocations=False).generate_from_frequencies(word_freq)
+        wc = WordCloud(collocations=False,**kwargs).generate_from_frequencies(word_freq)
     return wc
