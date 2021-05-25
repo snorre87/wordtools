@@ -9,7 +9,7 @@ from collections import Counter
 def run_w2vec(texts,emb_size=64):
 
     if type(texts[0])==str:
-        docs = [nltk.word_tokenize(i.lower()) for i in df.text]
+        docs = [nltk.word_tokenize(i.lower()) for i in texts]
         print('Tokenizing...')
     else:
         docs = texts
