@@ -212,7 +212,7 @@ def get_wordcloud(texts=False,word_freq=False,text=False,tfidf = True,collocatio
                 c = Counter(doc)
                 tf.update(c)
                 df.update(set(c))
-            wfreq = {w:tf[i]*np.log(n/df[i]) for i in tf}
+            wfreq = {i:tf[i]*np.log(n/df[i]) for i in tf}
     if word_freq!=False:
         wc = WordCloud(collocations=False,**kwargs).generate_from_frequencies(word_freq)
     return wc
