@@ -197,6 +197,7 @@ def color_by_groups(wc,w2group,cmap = plt.cm.tab20,default_color='grey'):
     plt.axis("off")
     return fig
 from collections import Counter
+import numpy as np
 def get_wordcloud(texts=False,word_freq=False,text=False,tfidf = True,collocations=False,tokenizer=nltk.word_tokenize,kwargs={}):
     if text!=False:
         wc = WordCloud(collocations=False,**kwargs).generate(text.lower())
