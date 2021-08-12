@@ -11,7 +11,7 @@ def replace_phrases(text,phrases):
     for i in phrases:
         text = text.replace(i,'_'.join(i.split()))
     return text
-def run_w2vec(texts,emb_size=64,known_phrases=[],kwargs={}):
+def run_w2vec(texts,emb_size=64,known_phrases=[], return_phrased=False,kwargs={}):
     if type(texts[0])==str:
         docs = [nltk.word_tokenize(replace_phrases(i.lower(),known_phrases)) for i in texts]
         print('Tokenizing...')
@@ -56,4 +56,7 @@ def run_w2vec(texts,emb_size=64,known_phrases=[],kwargs={}):
     import random
     random.shuffle(new_docs)
     w2v.train(new_docs,total_words = count,epochs=iter_)
+
+    if return_phrased:
+        return w2v,phrase_docs
     return w2v
