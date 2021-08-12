@@ -18,7 +18,7 @@ def run_w2vec(texts,emb_size=64,known_phrases=[], return_phrased=False,connector
     else:
         docs = texts
     print('Locating collocations...')
-    phrase_model_bi = Phrases(docs,connector_words=ENGLISH_CONNECTOR_WORDS)
+    phrase_model_bi = Phrases(docs,connector_words=connector_words)
 
     phrase_docs_bi = [phrase_model_bi[sent] for sent in docs]
     phrase_model = Phrases(phrase_docs_bi, delimiter=' ')
