@@ -13,7 +13,7 @@ def replace_phrases(text,phrases):
     return text
 def run_w2vec(texts,emb_size=64,known_phrases=[],kwargs={}):
     if type(texts[0])==str:
-        docs = [nltk.word_tokenize(replace_phrases(i.lower())) for i in texts]
+        docs = [nltk.word_tokenize(replace_phrases(i.lower(),known_phrases)) for i in texts]
         print('Tokenizing...')
     else:
         docs = texts
