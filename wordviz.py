@@ -196,9 +196,22 @@ def color_by_groups(wc,w2group,cmap = plt.cm.tab20,default_color='grey'):
     plt.imshow(wc, interpolation="bilinear")
     plt.axis("off")
     return fig
-def get_wordcloud(word_freq=False,text=False,collocations=False,kwargs={}):
+from collections import Counter
+def get_wordcloud(texts=False,word_freq=False,text=False,tfidf = True,collocations=False,tokenizer=nltk.word_tokenize,kwargs={}):
     if text!=False:
         wc = WordCloud(collocations=False,**kwargs).generate(text.lower())
+    else:
+        if tfidf:
+            tf = Counter()
+            df = Counter()
+            n = len(texts)
+            for text in texts:
+
+                doc = tokenizer(text)
+                c = Counter(doc)
+                tf.update(c)
+                df.update(set(c))
+            wfreq = {w:tf[i]*np.log(n/df[i]) for i in tf}
     if word_freq!=False:
         wc = WordCloud(collocations=False,**kwargs).generate_from_frequencies(word_freq)
     return wc
