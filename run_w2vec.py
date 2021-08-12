@@ -6,10 +6,14 @@ import logging
 
 from gensim.models.word2vec import Word2Vec
 from collections import Counter
-def run_w2vec(texts,emb_size=64):
 
+def replace_phrases(text,phrases):
+    for i in phrases:
+        text = text.replace(i,'_'.join(i.split()))
+    return text
+def run_w2vec(texts,emb_size=64,known_phrases=[],kwargs={}):
     if type(texts[0])==str:
-        docs = [nltk.word_tokenize(i.lower()) for i in texts]
+        docs = [nltk.word_tokenize(replace_phrases(i.lower())) for i in texts]
         print('Tokenizing...')
     else:
         docs = texts
