@@ -58,5 +58,5 @@ def run_w2vec(texts,emb_size=64,known_phrases=[], return_phrased=False,connector
     w2v.train(new_docs,total_words = count,epochs=iter_)
 
     if return_phrased:
-        return w2v,phrase_docs
+        return w2v,docs,phrase_docs_bi,phrase_docs
     return w2v
