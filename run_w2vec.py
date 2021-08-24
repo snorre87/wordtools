@@ -1,7 +1,7 @@
 import nltk
 import gensim
 nltk.download('punkt')
-from gensim.models.phrases import Phrases, ENGLISH_CONNECTOR_WORDS
+from gensim.models.phrases import Phrases
 import logging
 
 from gensim.models.word2vec import Word2Vec
@@ -11,7 +11,7 @@ def replace_phrases(text,phrases):
     for i in phrases:
         text = text.replace(i,'_'.join(i.split()))
     return text
-def run_w2vec(texts,emb_size=64,known_phrases=[], return_phrased=False,connector_words=ENGLISH_CONNECTOR_WORDS,return_counter=False,kwargs={}):
+def run_w2vec(texts,emb_size=64,known_phrases=[], return_phrased=False,connector_words=set(),return_counter=False,kwargs={}):
     if type(texts[0])==str:
         docs = [nltk.word_tokenize(replace_phrases(i.lower(),known_phrases)) for i in texts]
         print('Tokenizing...')
