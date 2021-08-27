@@ -21,7 +21,7 @@ def run_w2vec(texts,emb_size=64,known_phrases=[], return_phrased=False,return_co
     phrase_model_bi = Phrases(docs)
 
     phrase_docs_bi = [phrase_model_bi[sent] for sent in docs]
-    phrase_model = Phrases(phrase_docs_bi, delimiter=b' ')
+    phrase_model = Phrases(phrase_docs_bi)
     phrase_docs = [phrase_model[sent] for sent in phrase_docs_bi]
     # train w2v
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
