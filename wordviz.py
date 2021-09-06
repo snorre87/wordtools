@@ -198,9 +198,12 @@ def color_by_groups(wc,w2group,cmap = plt.cm.tab20,default_color='grey'):
     return fig
 from collections import Counter
 import numpy as np
-def get_wordcloud(texts=False,word_freq=False,text=False,tfidf = True,collocations=False,tokenizer=nltk.word_tokenize,kwargs={}):
+def get_wordcloud(texts=False,word_freq=False,text=False,tfidf = False,collocations=False,tokenizer=nltk.word_tokenize,kwargs={}):
     if text!=False:
         wc = WordCloud(collocations=False,**kwargs).generate(text.lower())
+        return wc
+    if word_freq!=False:
+        wc = WordCloud(collocations=False,**kwargs).generate_from_frequencies(word_freq)
     else:
         if tfidf:
             tf = Counter()
@@ -213,6 +216,5 @@ def get_wordcloud(texts=False,word_freq=False,text=False,tfidf = True,collocatio
                 tf.update(c)
                 df.update(set(c))
             word_freq = {i:tf[i]*np.log(n/df[i]) for i in tf}
-    if word_freq!=False:
-        wc = WordCloud(collocations=False,**kwargs).generate_from_frequencies(word_freq)
+    wc = WordCloud(collocations=False,**kwargs).generate_from_frequencies(word_freq)
     return wc
