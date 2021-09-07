@@ -73,8 +73,8 @@ class DANISH_SENTIMENT():
         return d
     funcs = [lambda x: self.afinn.score(x),
     lambda text:self.sent.sentida(text,output='total',normal=True,speed ='normal'),
-    lambda x: get_bert(x,self.classifier,{'no_emotion':True}),
-    lambda text: get_bert(text,self.classifier_tone),
+    lambda x: self.get_bert(x,self.classifier,{'no_emotion':True}),
+    lambda text: self.get_bert(text,self.classifier_tone),
         lambda text: self.hisia(text).sentiment.positive_probability,
         lambda text: max(self.nlp(text).cats.items(), key=operator.itemgetter(1))]
     names = ['afinn','sentida','bert_emotion','bert_tone','hisia_posprob','spacy_sent']
@@ -85,7 +85,7 @@ class DANISH_SENTIMENT():
             d[name] = func(text)
             dt = time.time()-t
             d_t[name] = dt
-        except:
+        except Exception as e:
             pass
     if timings:
       return d,d_t
