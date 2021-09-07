@@ -92,8 +92,7 @@ class DANISH_SENTIMENT():
     # hisia
     if not type(self.hisia)==bool:
       sent = self.hisia(text)
-      sent.sentiment
-      d['hisia_sent'] = sent.sentiment
+      d['hisia_sent'] = sent.sentiment.sentiment
     dt = time.time()-t
     d_t['hisia'] = dt
     t = time.time()
