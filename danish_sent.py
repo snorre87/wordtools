@@ -9,7 +9,7 @@ packages = ['sentida','danlp','allennlp','hisia','afinn']
 for package in packages:
     install(package)
 
-import nltk
+import nltk,numpy as np
 nltk.download('punkt')
 import operator
 import time
@@ -58,6 +58,8 @@ class DANISH_SENTIMENT():
 
   def get_sentiment(self,text,timings=False):
     d = {}
+    if text.strip()=='':
+        return d
     d_t = {}
     # afinn
     t = time.time()
@@ -69,7 +71,10 @@ class DANISH_SENTIMENT():
     t = time.time()
     # sentida
     if not type(self.sent)==bool:
-      score = self.sent.sentida(text,output='total',normal=True,speed ='normal')
+      try:
+        score = self.sent.sentida(text,output='total',normal=True,speed ='normal')
+      except:
+        score = np.nan
       d['sentida'] = score
     dt = time.time()-t
     d_t['sentida'] = dt
