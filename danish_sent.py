@@ -60,56 +60,22 @@ class DANISH_SENTIMENT():
     d = {}
     if text.strip()=='':
         return d
+    funcs = [lambda x: self.afinn.score(x),
+    lambda text:self.sent.sentida(text,output='total',normal=True,speed ='normal'),
+    lambda x: self.classifier.predict(x),
+    lambda text: self.classifier_tone.predict(text),
+        lambda text: self.hisia(text).sentiment.sentiment,
+        lambda text: max(self.nlp(text).cats.items(), key=operator.itemgetter(1))[0]]
+    names = ['afinn','sentida','bert_emotion','bert_tone','hisia','spacy_sent']
     d_t = {}
-    # afinn
-    t = time.time()
-    if not type(self.afinn)==bool:
-      score = self.afinn.score(text)
-      d['afinn'] = score
-    dt = time.time()-t
-    d_t['afinn'] = dt
-    t = time.time()
-    # sentida
-    if not type(self.sent)==bool:
-      try:
-        score = self.sent.sentida(text,output='total',normal=True,speed ='normal')
-      except:
-        score = np.nan
-      d['sentida'] = score
-    dt = time.time()-t
-    d_t['sentida'] = dt
-    t = time.time()
-    # bert emotion and tone
-    if not type(self.classifier)==bool:
-      bert = self.classifier.predict(text)
-      d['bert'] = bert
-    dt = time.time()-t
-    d_t['bert'] = dt
-    t = time.time()
-
-    if not type(self.classifier_tone)==bool:
-      bert = self.classifier_tone.predict(text)
-      d['bert_tone'] = bert
-    dt = time.time()-t
-    d_t['bert_tone'] = dt
-    t = time.time()
-
-    # hisia
-    if not type(self.hisia)==bool:
-      sent = self.hisia(text)
-      d['hisia_sent'] = sent.sentiment.sentiment
-    dt = time.time()-t
-    d_t['hisia'] = dt
-    t = time.time()
-
-    # spacy model
-    if not type(self.nlp)==bool:
-      doc = self.nlp(text)
-      spac = max(doc.cats.items(), key=operator.itemgetter(1))[0]
-      d['spacy_sent'] = spac
-    dt = time.time()-t
-    d_t['space_sent'] = dt
-    t = time.time()
+    for func,name in zip(funcs,names):
+        try:
+            t = time.time()
+            d[name] = func(text)
+            dt = time.time()-t
+            d_t[name] = dt
+        except:
+            pass
     if timings:
       return d,d_t
     return d
