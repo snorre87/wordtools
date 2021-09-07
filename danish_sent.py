@@ -55,15 +55,26 @@ class DANISH_SENTIMENT():
         print('hisia not working')
     else:
       self.hisia=False
+  def get_bert(text,clf,kwargs={}):
 
+    classes = clf._classes()
+
+    res = clf.predict_proba(text, **kwargs)
+    d = {}
+    for num in range(len(classes)):
+    em = res[num]
+    cl = classes[num]
+    for i,j in zip(cl,em):
+      d[i] = j
+    return d
   def get_sentiment(self,text,timings=False):
     d = {}
     if text.strip()=='':
         return d
     funcs = [lambda x: self.afinn.score(x),
     lambda text:self.sent.sentida(text,output='total',normal=True,speed ='normal'),
-    lambda x: self.classifier.predict(x),
-    lambda text: self.classifier_tone.predict(text),
+    lambda x: get_bert(x,self.classifier,{'no_emotion':True}),
+    lambda text: get_bert(text,self.classifier_tone),
         lambda text: self.hisia(text).sentiment.positive_probability,
         lambda text: max(self.nlp(text).cats.items(), key=operator.itemgetter(1))]
     names = ['afinn','sentida','bert_emotion','bert_tone','hisia_posprob','spacy_sent']
