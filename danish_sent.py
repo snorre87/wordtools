@@ -64,9 +64,9 @@ class DANISH_SENTIMENT():
     lambda text:self.sent.sentida(text,output='total',normal=True,speed ='normal'),
     lambda x: self.classifier.predict(x),
     lambda text: self.classifier_tone.predict(text),
-        lambda text: self.hisia(text).sentiment.sentiment,
-        lambda text: max(self.nlp(text).cats.items(), key=operator.itemgetter(1))[0]]
-    names = ['afinn','sentida','bert_emotion','bert_tone','hisia','spacy_sent']
+        lambda text: self.hisia(text).sentiment.positive_probability,
+        lambda text: max(self.nlp(text).cats.items(), key=operator.itemgetter(1))]
+    names = ['afinn','sentida','bert_emotion','bert_tone','hisia_posprob','spacy_sent']
     d_t = {}
     for func,name in zip(funcs,names):
         try:
