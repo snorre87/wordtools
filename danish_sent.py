@@ -62,10 +62,10 @@ class DANISH_SENTIMENT():
     res = clf.predict_proba(text, **kwargs)
     d = {}
     for num in range(len(classes)):
-    em = res[num]
-    cl = classes[num]
-    for i,j in zip(cl,em):
-      d[i] = j
+        em = res[num]
+        cl = classes[num]
+        for i,j in zip(cl,em):
+          d[i] = j
     return d
   def get_sentiment(self,text,timings=False):
     d = {}
