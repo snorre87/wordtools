@@ -75,7 +75,7 @@ class DANISH_SENTIMENT():
     lambda x: self.get_bert(x,clf=self.classifier,kwargs={'no_emotion':True}),
     lambda text: self.get_bert(text,clf=self.classifier_tone),
         lambda text: self.hisia(text).sentiment.positive_probability,
-        lambda text: max(self.nlp(text).cats.items(), key=operator.itemgetter(1))]
+        lambda text: self.nlp(text).cats.items()]
     names = ['afinn','sentida','bert_emotion','bert_tone','hisia_posprob','spacy_sent']
     d_t = {}
     for func,name in zip(funcs,names):
