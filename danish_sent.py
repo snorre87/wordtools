@@ -55,7 +55,7 @@ class DANISH_SENTIMENT():
         print('hisia not working')
     else:
       self.hisia=False
-  def get_bert(text,clf,kwargs={}):
+  def get_bert(self,text,clf,kwargs={}):
 
     res = clf.predict_proba(text, **kwargs)
     classes = clf._classes()
