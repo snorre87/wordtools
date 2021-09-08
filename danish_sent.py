@@ -88,7 +88,7 @@ class DANISH_SENTIMENT():
             if type(out)!=tuple:
                 d[name] = out
                 if type(out)==dict:
-                    d_s[name] = max(out,key=lambda x:x[1])[0]
+                    d_s[name] = max(out,key=lambda x:x[1])
                 else:
                     d_s[name] = out
             else:
