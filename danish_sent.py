@@ -57,9 +57,8 @@ class DANISH_SENTIMENT():
       self.hisia=False
   def get_bert(text,clf,kwargs={}):
 
-    classes = clf._classes()
-
     res = clf.predict_proba(text, **kwargs)
+    classes = clf._classes()
     d = {}
     for num in range(len(classes)):
         em = res[num]
