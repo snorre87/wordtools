@@ -4,11 +4,18 @@ import sys
 def install(package):
     subprocess.check_call([sys.executable, "-m", "pip", "install", package])
 
-packages = ['sentida','danlp','allennlp','hisia','afinn']
-# installing packages
-for package in packages:
-    install(package)
+packages = ['sentida==0.6.0','danlp==0.1.0','allennlp==2.7.0','hisia==0.3.1','afinn==0.1',
+'urllib3==1.26.7'] # google-cloud-storage
 
+# installing packages
+inp = input('Will install needed packages (only recommended on rebootable server / sandbox). Do you want to install? y or Enter.')
+
+if inp =='y':
+    print('Installing packages: %s'%('-'.join(packages)))
+    import tqdm
+    for package in tqdm.tqdm(packages):
+        install(package)
+    print('Done installing packages')
 import nltk,numpy as np
 nltk.download('punkt')
 import operator
@@ -17,7 +24,7 @@ class DANISH_SENTIMENT():
   def __init__(self,hisia=True):
     try:
       from afinn import Afinn
-      self.afinn = Afinn()
+      self.afinn = Afinn(language='da')
     except:
       print('afinn not installed')
       self.afinn = False
@@ -99,6 +106,24 @@ class DANISH_SENTIMENT():
             d_t[name] = dt
         except Exception as e:
             pass
+    d,d_s = recursive_float(d),recursive_float(d_s)
     if timings:
       return d,d_s,d_t
     return d,d_s
+def tofloat(val):
+  try:
+    return float(val)
+  except:
+    return val
+def recursive_float(d):
+  if not type(d)==dict:
+    return d
+  new_d = {}
+  for key in d:
+    val = d[key]
+    if hasattr(val, '__iter__'):
+      # recursive application
+      val = recursive_float(val)
+    val = tofloat(val)
+    new_d[key] = val
+  return new_d
