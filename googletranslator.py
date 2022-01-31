@@ -1,5 +1,5 @@
 ### Install the right version of googletrans
-dependencies = ['googletrans==3.1.0a0','langdetect','nltk']
+dependencies = ['googletrans==4.0.0-rc1','langdetect','nltk']
 import os
 for dep in dependencies:
   cmd = 'pip install %s'%dep
