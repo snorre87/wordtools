@@ -116,7 +116,7 @@ class Wordtree():
              ,after=widgets.IntSlider(min=0,max=30,step=1,value=context),
             k = widgets.IntSlider(min=0,max=250,step=1,value=25),
             full=False,random_word=False,dropdown= widgets.Dropdown(
-    options=['']+self.words[0:100],value=''))
+    options=['']+list(self.words[0:100]),value=''))
 import ipywidgets as widgets
 from ipywidgets import interact, interact_manual
 from ipywidgets import interact, interactive, fixed, interact_manual
