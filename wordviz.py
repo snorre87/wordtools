@@ -13,6 +13,7 @@ from IPython.core.display import HTML
 #http://stackoverflow.com/questions/9519673/why-does-google-load-cause-my-page-to-go-blank
 from string import Template
 import random
+import numpy as np
 from collections import Counter
 class Wordtree():
     def __init__(self,docs,tokenizer=nltk.word_tokenize):
@@ -26,6 +27,7 @@ class Wordtree():
         self.n_corpus = len(corpus)
         self.wcount = Counter(corpus)
         self.words,self.counts = zip(*self.wcount.most_common())
+        self.counts = np.array(self.counts)
         self.weights = self.counts/sum(self.counts)
     def get_concordance(self,word, before=5, after=5,k=20):
         import random
