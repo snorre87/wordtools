@@ -44,14 +44,13 @@ class Wordtree():
         return sentences
     def printmd(string):
         display(Markdown(string))
-
+    
     def display_concordance(self,word='we',before=5,after=5,k=20,full=False
     ,random_word=False,dropdown=False):
         sentences = []
         if dropdown!='':
             word = dropdown
         if random_word:
-            import numpy as np
             weights = self.weights
             word = np.random.choice(self.words,size=1,p=weights)[0]
         if full: #
