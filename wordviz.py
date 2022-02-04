@@ -18,7 +18,7 @@ from collections import Counter
 class Wordtree():
     def __init__(self,docs,tokenizer=nltk.word_tokenize):
         string_types = set([str,np.str])
-        self.tokenized_docs = [tokenizer(doc) if type(doc) in  else doc for doc in docs]
+        self.tokenized_docs = [tokenizer(doc) if type(doc) in string_types else doc for doc in docs]
         corpus = [word for doc in self.tokenized_docs for word in doc]
         self.corpus = corpus
         w2idx = {w.lower():[] for w in corpus}
