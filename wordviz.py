@@ -96,13 +96,13 @@ class Wordtree():
         #print(js_text)
         #print js_text + html_text
         return HTML(js_text+html_text)
-    def interact_wordtree(self,word='we'):
+    def interact_wordtree(self,word='we',context=5):
         if word.strip()=='':
             word = random.choice(self.wcount.most_common(250))[0][0]
             print(word)
         return interact(self.display_concordance, word=word
-             ,before=widgets.IntSlider(min=0,max=30,step=1,value=5)
-             ,after=widgets.IntSlider(min=0,max=30,step=1,value=5),
+             ,before=widgets.IntSlider(min=0,max=30,step=1,value=context)
+             ,after=widgets.IntSlider(min=0,max=30,step=1,value=context),
             k = widgets.IntSlider(min=0,max=250,step=1,value=25),
             full=False)
 import ipywidgets as widgets
