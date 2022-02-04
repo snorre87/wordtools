@@ -25,6 +25,8 @@ class Wordtree():
         self.w2idx = w2idx
         self.n_corpus = len(corpus)
         self.wcount = Counter(corpus)
+        self.words,self.counts = zip(*self.wcount.most_common())
+        self.weights = self.counts/sum(self.counts)
     def get_concordance(self,word, before=5, after=5,k=20):
         import random
         w = word.lower()
@@ -41,8 +43,13 @@ class Wordtree():
     def printmd(string):
         display(Markdown(string))
 
-    def display_concordance(self,word='we',before=5,after=5,k=20,full=False):
+    def display_concordance(self,word='we',before=5,after=5,k=20,full=False,random_word=False):
         sentences = []
+
+        if random_word:
+            import numpy as np
+            weights = self.weights
+            word = np.random.choice(words,size=1,p=weights)[0]
         if full: #
             n = len(self.tokenized_docs)
             n_words = sum(map(len,self.tokenized_docs))
@@ -104,7 +111,7 @@ class Wordtree():
              ,before=widgets.IntSlider(min=0,max=30,step=1,value=context)
              ,after=widgets.IntSlider(min=0,max=30,step=1,value=context),
             k = widgets.IntSlider(min=0,max=250,step=1,value=25),
-            full=False)
+            full=False,random_word=False)
 import ipywidgets as widgets
 from ipywidgets import interact, interact_manual
 from ipywidgets import interact, interactive, fixed, interact_manual
