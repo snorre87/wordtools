@@ -53,7 +53,7 @@ class Wordtree():
         if random_word:
             import numpy as np
             weights = self.weights
-            word = np.random.choice(words,size=1,p=weights)[0]
+            word = np.random.choice(self.words,size=1,p=weights)[0]
         if full: #
             n = len(self.tokenized_docs)
             n_words = sum(map(len,self.tokenized_docs))
