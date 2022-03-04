@@ -53,13 +53,11 @@ def run_w2vec(texts,emb_size=64,known_phrases=[], return_phrased=False,return_co
     ws = dict(ws.most_common(max_words))
     min_words = 2000000
     iter_ = min_words//count
-    iter_ = max(iter_,5)
+    iter_ = max(iter_,3)
     w2v = Word2Vec(vector_size=size,workers=workers,negative=10,window=window,min_count=min_count) # max_final_vocab = max_words
     w2v.build_vocab_from_freq(ws)
     print('Getting ready to train')
     #print(w2v.corpus_count)
-    new_docs = docs+phrase_docs_bi+phrase_docs
-    import random
     random.shuffle(new_docs)
     w2v.train(new_docs,total_words = count,epochs=iter_)
 
