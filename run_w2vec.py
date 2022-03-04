@@ -1,6 +1,5 @@
-import nltk
+
 import gensim
-nltk.download('punkt')
 from gensim.models.phrases import Phrases
 import logging
 
@@ -13,6 +12,8 @@ def replace_phrases(text,phrases):
     return text
 def run_w2vec(texts,emb_size=64,known_phrases=[], return_phrased=False,return_counter=False,kwargs={},phrases=True):
     if type(texts[0])==str:
+        import nltk
+        nltk.download('punkt')
         docs = [nltk.word_tokenize(replace_phrases(i.lower(),known_phrases)) for i in texts]
         print('Tokenizing...')
     else:
