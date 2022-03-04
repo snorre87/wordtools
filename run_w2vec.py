@@ -58,7 +58,6 @@ def run_w2vec(texts,emb_size=64,known_phrases=[], return_phrased=False,return_co
     w2v.build_vocab_from_freq(ws)
     print('Getting ready to train')
     #print(w2v.corpus_count)
-    random.shuffle(new_docs)
     w2v.train(new_docs,total_words = count,epochs=iter_)
 
     if return_phrased:
