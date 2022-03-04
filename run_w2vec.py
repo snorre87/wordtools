@@ -6,23 +6,24 @@ import logging
 
 from gensim.models.word2vec import Word2Vec
 from collections import Counter
-
+import random
 def replace_phrases(text,phrases):
     for i in phrases:
         text = text.replace(i,'_'.join(i.split()))
     return text
-def run_w2vec(texts,emb_size=64,known_phrases=[], return_phrased=False,return_counter=False,kwargs={}):
+def run_w2vec(texts,emb_size=64,known_phrases=[], return_phrased=False,return_counter=False,kwargs={},phrases=True):
     if type(texts[0])==str:
         docs = [nltk.word_tokenize(replace_phrases(i.lower(),known_phrases)) for i in texts]
         print('Tokenizing...')
     else:
         docs = texts
-    print('Locating collocations...')
-    phrase_model_bi = Phrases(docs)
+    if phrases:
+        print('Locating collocations...')
+        phrase_model_bi = Phrases(docs)
 
-    phrase_docs_bi = [phrase_model_bi[sent] for sent in docs]
-    phrase_model = Phrases(phrase_docs_bi)
-    phrase_docs = [phrase_model[sent] for sent in phrase_docs_bi]
+        phrase_docs_bi = [phrase_model_bi[sent] for sent in docs]
+        phrase_model = Phrases(phrase_docs_bi)
+        phrase_docs = [phrase_model[sent] for sent in phrase_docs_bi]
     # train w2v
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
     ############
@@ -38,7 +39,12 @@ def run_w2vec(texts,emb_size=64,known_phrases=[], return_phrased=False,return_co
     min_count=5 # Number of Occurrences to be kept in the Vocabulary
     count = 0
     ws = Counter()
-    new_docs = docs+phrase_docs_bi+phrase_docs
+
+    if phrases:
+        new_docs = docs+phrase_docs_bi+phrase_docs
+    else:
+        new_docs = docs
+    random.shuffle(new_docs)
     for i in new_docs:
         count+=len(i)
         for w in i:
