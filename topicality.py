@@ -26,8 +26,9 @@ class Topicality():
         self.entropy_w = run_entropy(self.dtm)
         print('Running w2vec')
         self.w2v = run_w2vec(self.docs)
+        self.w2vec_w2id = {w:num for num,w in enumerate(model.wv.index_to_key)}
         ## Normalize word embeddings
-        self.w2v_m,self.w2w_std = model.wv.vectors.mean(axis=0),model.wv.vectors.std(axis=0)
+        self.w2v_m,self.w2w_std = self.w2v.wv.vectors.mean(axis=0),self.w2v.wv.vectors.std(axis=0)
 
     def get_word_vector(self,w,normed=True,lower=True):
 
@@ -35,10 +36,11 @@ class Topicality():
         Input either a word or a sequence of words.
         example: 'hello_world' or 'hello world'
          """
+
         if lower:
             w = w.lower()
-        if w in w2vec_w2id:
-            vec = model.wv.get_vector(w)
+        if w in self.w2vec_w2id:
+            vec = self.w2v.wv.get_vector(w)
         else:
             ws = re.split('_| ',w)
             start,end = 0,len(ws)
@@ -46,8 +48,8 @@ class Topicality():
             vec = []
             while start<n and start<end:
                 seq = '_'.join(ws[start:end])
-                if seq in w2vec_w2id:
-                    vec.append(model.wv.get_vector(seq))
+                if seq in self.w2vec_w2id:
+                    vec.append(self.w2v.wv.get_vector(seq))
                     start = end
                     end = len(ws)
                 else:
