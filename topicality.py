@@ -3,6 +3,7 @@ import gensim
 import pandas as pd
 from gensim.models.phrases import Phrases
 import logging
+import re
 import nltk
 nltk.download('punkt')
 from gensim.models.word2vec import Word2Vec
