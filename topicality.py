@@ -72,6 +72,7 @@ class Topicality():
         dtm = self.dtm
         w2id = self.w2i
         words = list(words)
+        print(len(words))
         dat = []
         mat = []
         for w in words:
