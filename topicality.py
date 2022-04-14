@@ -83,7 +83,8 @@ class Topicality():
             dat.append(d)
         df = pd.DataFrame(dat)
         mat = np.array(mat)
-        print('making 2d')
+        print(mat.shape)
+        print('Making 2d')
         embedding = get_2d_embedding(mat,reducer=reducer)
         embedding = reducer.fit_transform(mat)
         df['x_w'] = embedding[:,0]
