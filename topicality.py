@@ -28,36 +28,36 @@ class Topicality():
         ## Normalize word embeddings
         self.w2v_m,self.w2w_std = model.wv.vectors.mean(axis=0),model.wv.vectors.std(axis=0)
 
-    def self.get_word_vector(self,w,normed=True,lower=True):
-        def get_word_vector(w,normed=True,lower=True):
-            """Get Word2Vec vector from input.
-            Input either a word or a sequence of words.
-            example: 'hello_world' or 'hello world'
-             """
-            if lower:
-                w = w.lower()
-            if w in w2vec_w2id:
-                vec = model.wv.get_vector(w)
-            else:
-                ws = re.split('_| ',w)
-                start,end = 0,len(ws)
-                n = len(ws)
-                vec = []
-                while start<n and start<end:
-                    seq = '_'.join(ws[start:end])
-                    if seq in w2vec_w2id:
-                        vec.append(model.wv.get_vector(seq))
-                        start = end
-                        end = len(ws)
-                    else:
-                        end-=1
-                if len(vec)==0:
-                    return self.w2v_m
-                vec = np.array(vec)
-                vec = vec.mean(axis=0)
-                if normed:
-                    vec = (vec-self.w2v_m)/self.w2v_std
-            return vec
+    def get_word_vector(self,w,normed=True,lower=True):
+
+        """Get Word2Vec vector from input.
+        Input either a word or a sequence of words.
+        example: 'hello_world' or 'hello world'
+         """
+        if lower:
+            w = w.lower()
+        if w in w2vec_w2id:
+            vec = model.wv.get_vector(w)
+        else:
+            ws = re.split('_| ',w)
+            start,end = 0,len(ws)
+            n = len(ws)
+            vec = []
+            while start<n and start<end:
+                seq = '_'.join(ws[start:end])
+                if seq in w2vec_w2id:
+                    vec.append(model.wv.get_vector(seq))
+                    start = end
+                    end = len(ws)
+                else:
+                    end-=1
+            if len(vec)==0:
+                return self.w2v_m
+            vec = np.array(vec)
+            vec = vec.mean(axis=0)
+            if normed:
+                vec = (vec-self.w2v_m)/self.w2v_std
+        return vec
     ## Visualization
     def visualize_wordspace(self,words,topn=250,w2group=False,cmap=plt.cm.gist_ncar,return_2d = False,clustering = sklearn.cluster.KMeans(n_clusters=20),reducer='umap'):
         """Visualize words in 2d space with labels.
