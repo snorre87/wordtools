@@ -26,7 +26,7 @@ class Topicality():
         self.entropy_w = run_entropy(self.dtm)
         print('Running w2vec')
         self.w2v = run_w2vec(self.docs)
-        self.w2vec_w2id = {w:num for num,w in enumerate(model.wv.index_to_key)}
+        self.w2vec_w2id = {w:num for num,w in enumerate(self.w2v.wv.index_to_key)}
         ## Normalize word embeddings
         self.w2v_m,self.w2w_std = self.w2v.wv.vectors.mean(axis=0),self.w2v.wv.vectors.std(axis=0)
 
