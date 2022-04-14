@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import tqdm
 class Topicality():
-    def __init__(self,texts,tokenizer=nltk.word_tokenize,ngram=3,min_count=5,max_words=100000,w2vec_kwargs=False):
+    def __init__(self,texts,tokenizer=nltk.word_tokenize,ngram=3,min_count=5,max_words=100000,w2vec_kwargs={}):
         self.texts = texts
         print('tokenizing')
         self.docs = [[i.lower() for i in nltk.word_tokenize(text)] for text in texts]
@@ -27,7 +27,7 @@ class Topicality():
         print('Running Entropy/Topicality detector')
         self.entropy_w = run_entropy(self.dtm)
         print('Running w2vec')
-        self.w2v = run_w2vec(self.docs,**w2vec_kwargs)
+        self.w2v = run_w2vec(self.docs,**w2vec_kwargs=)
         self.w2vec_w2id = {w:num for num,w in enumerate(self.w2v.wv.index_to_key)}
         ## Normalize word embeddings
         self.w2v_m,self.w2v_std = self.w2v.wv.vectors.mean(axis=0),self.w2v.wv.vectors.std(axis=0)
@@ -360,12 +360,13 @@ def dtm_tfidf(dtm):
     return tfidf.tocsr()
 from scipy.stats import entropy
 def run_entropy(dtm):
-    tfidf = dtm_tfidf(dtm)
+    tfidf = topicality.dtm_tfidf(dtm)
+    sign = (dtm>0)
+    bow = sign*1
+    bow = bow.T
+    cross = bow.dot(tfidf)
     ents = []
-    for i in tqdm.tqdm(np.arange(dtm.shape[1])):
-        idx = (np.asarray(dtm[:,i].sum(axis=1)).flatten()>0)*1
-        s = np.asarray(tfidf[idx].sum(axis=0)).flatten()
-        ent = entropy(s[s>0])
-        ents.append(ent)
+    for vec in tqdm.tqdm(cross):
+      ents.append(entropy(np.asarray(vec.sum(axis=0)).flatten()))
     ents = np.array(ents)
     return ents
