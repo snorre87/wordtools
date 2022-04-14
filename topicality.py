@@ -81,7 +81,7 @@ class Topicality():
                 continue
             idx = w2id[w]
             d = {'w':w,'count':dtm[:,idx].sum()}
-            mat.append(get_word_vector(w))
+            mat.append(self.get_word_vector(w))
             dat.append(d)
         df = pd.DataFrame(dat)
         mat = np.array(mat)
