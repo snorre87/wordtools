@@ -12,7 +12,7 @@ import sklearn.cluster
 import matplotlib.pyplot as plt
 
 class Topicality():
-    def __int__(self,texts,tokenizer=nltk.word_tokenize,ngram=3,min_count=5,max_words=100000):
+    def __init__(self,texts,tokenizer=nltk.word_tokenize,ngram=3,min_count=5,max_words=100000):
         self.texts = texts
         print('tokenizing')
         self.docs = [[i.lower() for i in nltk.word_tokenize(text)] for text in texts]
