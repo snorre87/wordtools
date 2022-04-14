@@ -144,7 +144,7 @@ class Topicality():
         c = np.asarray(bow.sum(axis=0)).flatten()
         ps = c/bow.shape[0]
         Index = self.Index
-        nodes = set([Index[i] for i in sort[0:nwords] if ps[nwords]<freq_cut and ents_normed[i]<topicality_cut])
+        nodes = set([Index[i] for i in sort[0:nwords] if ps[i]<freq_cut and ents_normed[i]<topicality_cut])
         if add_k_neighbors>0:
             # locate meaningful cut
             sort = ents_normed.argsort()
