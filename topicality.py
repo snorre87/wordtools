@@ -360,7 +360,7 @@ def dtm_tfidf(dtm):
     return tfidf.tocsr()
 from scipy.stats import entropy
 def run_entropy(dtm):
-    tfidf = topicality.dtm_tfidf(dtm)
+    tfidf = dtm_tfidf(dtm)
     sign = (dtm>0)
     bow = sign*1
     bow = bow.T
