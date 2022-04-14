@@ -83,21 +83,15 @@ class Topicality():
             dat.append(d)
         df = pd.DataFrame(dat)
         mat = np.array(mat)
-
+        print('making 2d')
         embedding = get_2d_embedding(mat,reducer=reducer)
         embedding = reducer.fit_transform(mat)
         df['x_w'] = embedding[:,0]
         df['y_w'] = embedding[:,1]
         if not w2group:
-            # Doing agglomerative clustering on words.
-            #partition = dict(df[['w','category']].values)
-            # Consider clustering
-            vectors = []
-            for w in words:
-                vectors.append(get_word_vector(w))
-            labels = clustering.fit_predict(np.array(vectors))
+            print('Clustering')
+            labels = clustering.fit_predict(mat)
             w2group = {words[i]:labels[i] for i in range(len(labels))}
-        #w2group = {w:num for num,w in enumerate(words)}
         groups = set(w2group.values())
         # gist rainbow or tab20 or spectral gist_ncar
         g2color = {i:cmap(num/len(groups)) for num,i in enumerate(groups)}
