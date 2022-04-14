@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import tqdm
 class Topicality():
-    def __init__(self,texts,tokenizer=nltk.word_tokenize,ngram=3,min_count=5,max_words=100000):
+    def __init__(self,texts,tokenizer=nltk.word_tokenize,ngram=3,min_count=5,max_words=100000,w2vec_verbose=False):
         self.texts = texts
         print('tokenizing')
         self.docs = [[i.lower() for i in nltk.word_tokenize(text)] for text in texts]
@@ -26,7 +26,7 @@ class Topicality():
         print('Running Entropy/Topicality detector')
         self.entropy_w = run_entropy(self.dtm)
         print('Running w2vec')
-        self.w2v = run_w2vec(self.docs)
+        self.w2v = run_w2vec(self.docs,verbose=w2vec_verbose)
         self.w2vec_w2id = {w:num for num,w in enumerate(self.w2v.wv.index_to_key)}
         ## Normalize word embeddings
         self.w2v_m,self.w2w_std = self.w2v.wv.vectors.mean(axis=0),self.w2v.wv.vectors.std(axis=0)
@@ -254,7 +254,7 @@ def replace_phrases(text,phrases):
     for i in phrases:
         text = text.replace(i,'_'.join(i.split()))
     return text
-def run_w2vec(texts,known_phrases=[], return_phrased=False,return_counter=False,kwargs={},phrases=True):
+def run_w2vec(texts,known_phrases=[], return_phrased=False,return_counter=False,kwargs={},phrases=True,verbose=True):
     if type(texts[0])==str:
         docs = [nltk.word_tokenize(replace_phrases(i.lower(),known_phrases)) for i in texts]
         print('Tokenizing...')
@@ -268,7 +268,8 @@ def run_w2vec(texts,known_phrases=[], return_phrased=False,return_counter=False,
         phrase_model = Phrases(phrase_docs_bi)
         phrase_docs = [phrase_model[sent] for sent in phrase_docs_bi]
     # train w2v
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+    if verbose:
+        logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
     ############
     ## missing
     #####load pretrained and just retrain
