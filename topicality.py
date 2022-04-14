@@ -253,7 +253,7 @@ def replace_phrases(text,phrases):
     for i in phrases:
         text = text.replace(i,'_'.join(i.split()))
     return text
-def run_w2vec(texts,emb_size=64,known_phrases=[], return_phrased=False,return_counter=False,kwargs={},phrases=True):
+def run_w2vec(texts,known_phrases=[], return_phrased=False,return_counter=False,kwargs={},phrases=True):
     if type(texts[0])==str:
         docs = [nltk.word_tokenize(replace_phrases(i.lower(),known_phrases)) for i in texts]
         print('Tokenizing...')
@@ -296,6 +296,7 @@ def run_w2vec(texts,emb_size=64,known_phrases=[], return_phrased=False,return_co
     min_words = 2000000
     iter_ = min_words//count
     iter_ = max(iter_,3)
+    size = calculate_w2vec_size(count)
     w2v = Word2Vec(vector_size=size,workers=workers,negative=10,window=window,min_count=min_count) # max_final_vocab = max_words
     w2v.build_vocab_from_freq(ws)
     print('Getting ready to train')
