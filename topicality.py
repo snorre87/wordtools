@@ -30,7 +30,7 @@ class Topicality():
         self.w2v = run_w2vec(self.docs,verbose=w2vec_verbose)
         self.w2vec_w2id = {w:num for num,w in enumerate(self.w2v.wv.index_to_key)}
         ## Normalize word embeddings
-        self.w2v_m,self.w2w_std = self.w2v.wv.vectors.mean(axis=0),self.w2v.wv.vectors.std(axis=0)
+        self.w2v_m,self.w2v_std = self.w2v.wv.vectors.mean(axis=0),self.w2v.wv.vectors.std(axis=0)
 
     def get_word_vector(self,w,normed=True,lower=True):
 
@@ -73,7 +73,6 @@ class Topicality():
         dtm = self.dtm
         w2id = self.w2i
         words = list(words)
-        print(len(words))
         dat = []
         mat = []
         for w in words:
@@ -85,10 +84,7 @@ class Topicality():
             dat.append(d)
         df = pd.DataFrame(dat)
         mat = np.array(mat)
-        print(mat.shape)
-        print('Making 2d')
         embedding = get_2d_embedding(mat,reducer=reducer)
-        embedding = reducer.fit_transform(mat)
         df['x_w'] = embedding[:,0]
         df['y_w'] = embedding[:,1]
         if not w2group:
