@@ -274,14 +274,12 @@ def run_w2vec(texts,known_phrases=[], return_phrased=False,return_counter=False,
     ###############
     ### Define parameters for the model ###
     max_words = 100000
-    size=emb_size # Size of Embedding.
     workers=4 # Number CPU Cores to use for training in Parallel.
     iter_= 50 # Depending on the size of your data you might want to run through your data more than once.
     window=6 # How much Context
     min_count=5 # Number of Occurrences to be kept in the Vocabulary
     count = 0
     ws = Counter()
-
     if phrases:
         new_docs = docs+phrase_docs_bi+phrase_docs
     else:
