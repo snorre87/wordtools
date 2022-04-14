@@ -69,3 +69,80 @@ def run_w2vec(texts,emb_size=64,known_phrases=[], return_phrased=False,return_co
     if return_counter:
         w2v,ws
     return w2v
+
+def process_document(text,tokenizer = nltk.tokenize.word_tokenize):
+    text = ''.join(text)
+    text = tokenizer(text)
+    # lower
+    text = [i.lower() for i in text]
+    return text
+def to_dense(corpus,vocab_size):
+    X = np.zeros((len(corpus),vocab_size),dtype=np.int32)
+    for num in range(len(corpus)):
+        bow = corpus[num]
+        for w,count in bow.items():
+            try:
+                X[num][w]=count
+            except:
+                pass
+    return X
+import scipy.sparse as sp
+def to_sparse(corpus,vocab_size):
+    X = sp.dok_matrix((len(corpus),vocab_size), dtype=np.int32)
+    for num in range(len(corpus)):
+        bow = corpus[num]
+        for w,count in bow.items():
+            X[num,w]=count
+    X = X.tocsr()
+    return X
+
+def to_index(text,d):
+    return [d[i] if i in d else 0 for i in text]
+def to_bow(texts,d,ngram=3,sparse = True):
+    vocab_size = len(d)
+    w2id = {w:num for num,w in enumerate(d)}
+    bows = [Counter(to_index(get_ngram(text,ngram),w2id)) for text in texts]
+    if sparse:
+        return to_sparse(bows,vocab_size)
+    else:
+        return bows
+def get_ngram(doc,n=2):
+    grams = doc.copy()
+
+    for gram in range(2,n+1):
+        grams+=['_'.join(doc[i:i+gram]) for i in range(len(doc)+1-gram)]
+    return grams
+
+def make_index(texts,ngram=False,cutoff=5,max_words=100000):
+    c = Counter()
+    if ngram==False:
+        for doc in texts:
+            for w in doc:
+                c[w]+=1
+    else:
+        for doc in texts:
+            grams = get_ngram(doc,ngram)
+            for w in grams:
+                c[w]+=1
+    return ['__out__']+[w for w,count in c.most_common(max_words) if count>=cutoff]
+def get_dtm(texts):
+    docs = [process_document(text) for text in texts]
+def dtm_tfidf(dtm):
+    # Document frequency
+    df = np.asarray(dtm.sign().sum(axis=0))[0,:]
+    # Inverse document frequency
+    idf =-np.log(df/dtm.shape[0])
+    # Combined term frequence and inverse document frequency
+    tfidf = dtm.multiply(idf)
+    return tfidf.tocsr()
+from scipy.stats import entropy
+def run_entropy(bow,path):
+    tfidf = dtm_tfidf(bow)
+    ents = []
+    for i in tqdm.tqdm(np.arange(bow.shape[1])):
+        idx = (np.asarray(bow[:,i].sum(axis=1)).flatten()>0)*1
+        s = np.asarray(tfidf[idx].sum(axis=0)).flatten()
+        ent = entropy(s[s>0])
+        ents.append(ent)
+    ents = np.array(ents)
+    pickle.dump(ents,open(path+'entropy_w','wb'))
