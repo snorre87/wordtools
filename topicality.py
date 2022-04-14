@@ -17,10 +17,10 @@ class Topicality():
         print('tokenizing')
         self.docs = [[i.lower() for i in nltk.word_tokenize(text)] for text in texts]
         print('making index')
-        self.Index = make_index(self.texts,ngram=ngram,cutoff=min_count,max_words=max_words)
+        self.Index = make_index(self.docs,ngram=ngram,cutoff=min_count,max_words=max_words)
         self.w2i = {w:num for num,w in enumerate(self.Index)}
         print('Transforming to DocTermMatrix')
-        self.dtm = to_bow(texts,self.w2i,ngram=ngram)
+        self.dtm = to_bow(self.docs,self.w2i,ngram=ngram)
         print('Running Entropy/Topicality detector')
         self.entropy_w = run_entropy(self.dtm)
         print('Running w2vec')
