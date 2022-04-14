@@ -368,7 +368,7 @@ from scipy.stats import entropy
 def run_entropy(dtm):
     tfidf = dtm_tfidf(dtm)
     ents = []
-    for i in tqdm.tqdm(np.arange(bow.shape[1])):
+    for i in tqdm.tqdm(np.arange(dtm.shape[1])):
         idx = (np.asarray(dtm[:,i].sum(axis=1)).flatten()>0)*1
         s = np.asarray(tfidf[idx].sum(axis=0)).flatten()
         ent = entropy(s[s>0])
