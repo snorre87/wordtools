@@ -361,7 +361,7 @@ def dtm_tfidf(dtm):
     return tfidf.tocsr()
 from scipy.stats import entropy
 def run_entropy(dtm):
-    tfidf = topicality.dtm_tfidf(dtm)
+    tfidf = dtm_tfidf(dtm)
     ents = []
     for i in tqdm.tqdm(np.arange(dtm.shape[1])):
         idx = (np.asarray(dtm[:,i].sum(axis=1)).flatten()>0)*1
