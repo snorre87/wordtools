@@ -17,7 +17,7 @@ class Topicality():
         print('tokenizing')
         self.docs = [[i.lower() for i in nltk.word_tokenize(text)] for text in texts]
         print('making index')
-        self.Index = self.make_index(self.texts,ngram=ngram,cutoff=min_count,max_words=max_words)
+        self.Index = make_index(self.texts,ngram=ngram,cutoff=min_count,max_words=max_words)
         self.w2i = {w:num for num,w in enumerate(self.Index)}
         print('Transforming to DocTermMatrix')
         self.dtm = to_bow(texts,self.w2i,ngram=ngram)
