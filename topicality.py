@@ -124,6 +124,7 @@ class Topicality():
         if return_2d:
             return df,fig,ax
         return fig,ax
+
     def visualize_topical_words(self,nwords=1000,topn_visible=300,add_k_neighbors=0,norm_window = 15,return_data=False,freq_cut=0.5,topicality_cut_quantile=0.25
     ,clustering = sklearn.cluster.KMeans(n_clusters=20),reducer='umap',remove_duplicate_phrases=False):
         """Function for visualizing topical words in w2vec reduced 2d space. Topical words are based on the relative (to neighbors of similar occurrence of each word) entropy of the weighted and tfidf normalized co-occurrence network.
@@ -360,13 +361,12 @@ def dtm_tfidf(dtm):
     return tfidf.tocsr()
 from scipy.stats import entropy
 def run_entropy(dtm):
-    tfidf = dtm_tfidf(dtm)
-    sign = (dtm>0)
-    bow = sign*1
-    bow = bow.T
-    cross = bow.dot(tfidf)
+    tfidf = topicality.dtm_tfidf(dtm)
     ents = []
-    for vec in tqdm.tqdm(cross):
-      ents.append(entropy(np.asarray(vec.sum(axis=0)).flatten()))
+    for i in tqdm.tqdm(np.arange(dtm.shape[1])):
+        idx = (np.asarray(dtm[:,i].sum(axis=1)).flatten()>0)*1
+        s = np.asarray(tfidf[idx==1].sum(axis=0)).flatten()
+        ent = entropy(s[s>0])
+        ents.append(ent)
     ents = np.array(ents)
     return ents
