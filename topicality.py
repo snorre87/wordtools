@@ -146,6 +146,8 @@ class Topicality():
         nodes = set()
         dup_g = nx.Graph()
         for i in sort:
+            if len(nodes)>nwords:
+                break
             wi = Index[i]
             if ps[i]>=freq_cut:
                 continue
