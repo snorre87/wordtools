@@ -135,6 +135,7 @@ class Topicality():
         remove_duplicate_phrases will remove multiwords that share stems, keeping only the most topical.
         remove_non_w2vec means removing phrases not found by collocation detection.
         Use custom_filter to remove certain patterns: e.g. lambda x: x.isdigit()
+        Use cleaner to clean words: e.g. lambda x: x.strip(',.?)(_')
         """
         ents = self.entropy_w
         w = norm_window
@@ -152,6 +153,7 @@ class Topicality():
                 break
             wi = Index[i]
             if custom_filter(wi):
+                print('yo')
                 continue
             if ps[i]>=freq_cut:
                 continue
