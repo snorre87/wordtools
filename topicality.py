@@ -127,7 +127,7 @@ class Topicality():
         return fig,ax
 
     def visualize_topical_words(self,nwords=1000,topn_visible=300,add_k_neighbors=0,norm_window = 15,return_data=False,freq_cut=0.5,topicality_cut_quantile=0.25
-    ,clustering = sklearn.cluster.KMeans(n_clusters=20),reducer='umap',remove_duplicate_phrases=False,dupe_cut=0.75):
+    ,clustering = sklearn.cluster.KMeans(n_clusters=20),reducer='umap',remove_duplicate_phrases=True,dupe_cut=0.95):
         """Function for visualizing topical words in w2vec reduced 2d space. Topical words are based on the relative (to neighbors of similar occurrence of each word) entropy of the weighted and tfidf normalized co-occurrence network.
         Choose number of words to include (nwords), and how many should be visible (topn_visible). Choose to add neighbors using w2vec for attenuating clusters.
         Return fig,ax, and optionally a dataframe consisting of 2d coordinates and cluster categories.
@@ -153,36 +153,39 @@ class Topicality():
                 continue
             if ents_normed[i]>topicality_cut:
                 break
+            if not wi in self.w2vec_w2id:
+                continue
             nodes.add(wi)
-            if '_' in wi:
-                suspects = set()
-                parts = wi.split('_')
-                for part in parts:
-                    if dup_g.has_node(part):
-                        for n in dup_g[part]:
-                            suspects.add(n)
-                    dup_g.add_edge(i,part)
-                if len(suspects)>0:
-                    remove = set()
-                    idx = bow[:,i]
-                    s = sum(idx)
-                    for j in suspects:
-                        idxj = bow[:,j]
-                        s2 = sum(idxj)
-                        overlap = idx.dot(idxj)
-                        if overlap/(min(s,s2))>dupe_cut:
-                            if s2>=s:
-                                out.add(i)
-                                break
-                            else:
-                                out.add(j)
-                    for n in out:
-                        nodes.remove(Index[n])
-                        dup_g.remove_node(n)
+            if remove_duplicate_phrases:
+                if '_' in wi:
+                    suspects = set()
+                    parts = wi.split('_')
+                    for part in parts:
+                        if dup_g.has_node(part):
+                            for n in dup_g[part]:
+                                suspects.add(n)
+                        dup_g.add_edge(i,part)
+                    if len(suspects)>0:
+                        remove = set()
+                        idx = bow[:,i]
+                        s = sum(idx)
+                        for j in suspects:
+                            idxj = bow[:,j]
+                            s2 = sum(idxj)
+                            overlap = idx.dot(idxj)
+                            if overlap/(min(s,s2))>dupe_cut:
+                                if s2>=s:
+                                    out.add(i)
+                                    break
+                                else:
+                                    out.add(j)
+                        for n in out:
+                            nodes.remove(Index[n])
+                            dup_g.remove_node(n)
 
 
-            else:
-                g.add_edge(i,wi)
+                else:
+                    dup_g.add_edge(i,wi)
 
         #nodes = set([Index[i] for i in sort[0:nwords] if ps[i]<freq_cut and ents_normed[i]<topicality_cut])
         if add_k_neighbors>0:
