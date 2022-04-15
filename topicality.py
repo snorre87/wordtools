@@ -243,6 +243,7 @@ def reduce_mat(mat,reducer='umap'):
 def get_2d_embedding(mat,reducer='umap'):
     "Reduction models include: TSNE UMAP and PCA,'tsne','umap','pca'"
     print('Reduce to 2d via: %s'%reducer.upper())
+    print(mat.shape)
     embedding = reduce_mat(mat,reducer=reducer)
     return embedding
 
