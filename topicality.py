@@ -148,6 +148,7 @@ class Topicality():
         Index = self.Index
         nodes = set()
         dup_g = nx.Graph()
+        print(len(sort))
         for i in sort:
             if len(nodes)>nwords:
                 break
