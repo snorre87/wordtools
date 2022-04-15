@@ -83,6 +83,7 @@ class Topicality():
             d = {'w':cleaner(w),'count':dtm[:,idx].sum()}
             mat.append(self.get_word_vector(w))
             dat.append(d)
+        words = [cleaner(w) for w in words]
         df = pd.DataFrame(dat)
         mat = np.array(mat)
         embedding = get_2d_embedding(mat,reducer=reducer)
