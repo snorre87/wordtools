@@ -187,7 +187,7 @@ class Topicality():
                                 else:
                                     out.add(j)
                         for n in out:
-                            nodes.remove(Index[n])
+                            nodes.remove(cleaner(Index[n]))
                             dup_g.remove_node(n)
 
 
