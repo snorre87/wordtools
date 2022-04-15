@@ -65,7 +65,7 @@ class Topicality():
                 vec = (vec-self.w2v_m)/self.w2v_std
         return vec
     ## Visualization
-    def visualize_wordspace(self,words,topn=250,w2group=False,cmap=plt.cm.gist_ncar,return_2d = False,clustering = sklearn.cluster.KMeans(n_clusters=20),reducer='umap'):
+    def visualize_wordspace(self,words,topn=250,w2group=False,cmap=plt.cm.gist_ncar,return_2d = False,clustering = sklearn.cluster.KMeans(n_clusters=20),reducer='umap',cleaner=lambda x: x):
         """Visualize words in 2d space with labels.
         Groups are defined by the w2group, input > dict
         topn> int, keeping only the n most occurring words, normalzed by     count in each group.
@@ -80,7 +80,7 @@ class Topicality():
             if not w in w2id:
                 continue
             idx = w2id[w]
-            d = {'w':w,'count':dtm[:,idx].sum()}
+            d = {'w':cleaner(w),'count':dtm[:,idx].sum()}
             mat.append(self.get_word_vector(w))
             dat.append(d)
         df = pd.DataFrame(dat)
@@ -161,7 +161,6 @@ class Topicality():
             if remove_non_w2vec:
                 if not wi in self.w2vec_w2id:
                     continue
-            wi = cleaner(wi)
             nodes.add(wi)
             if remove_duplicate_phrases:
                 if '_' in wi:
@@ -229,7 +228,7 @@ class Topicality():
                     nodes.add(n2)
                     if count==kn:
                         break
-        return self.visualize_wordspace(nodes,topn=topn_visible,return_2d=return_data,clustering=clustering,reducer=reducer)
+        return self.visualize_wordspace(nodes,topn=topn_visible,return_2d=return_data,clustering=clustering,reducer=reducer,cleaner=cleaner)
 
 
 ## Visualization
