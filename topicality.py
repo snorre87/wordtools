@@ -172,7 +172,7 @@ class Topicality():
                         for j in suspects:
                             idxj = bow[:,j]
                             s2 = sum(idxj)
-                            overlap = idx.dot(idxj)
+                            overlap = idx.T.dot(idxj).sum()
                             if overlap/(min(s,s2))>dupe_cut:
                                 if s2>=s:
                                     out.add(i)
