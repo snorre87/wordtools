@@ -148,27 +148,20 @@ class Topicality():
         Index = self.Index
         nodes = set()
         dup_g = nx.Graph()
-        print(len(sort))
         for i in sort:
             if len(nodes)>nwords:
-                print(len(nodes))
                 break
             wi = Index[i]
             if custom_filter(wi):
-                print('custom')
                 continue
             if ps[i]>=freq_cut:
-                print('freq')
                 continue
             if ents_normed[i]>topicality_cut:
-                print('topicality_cut')
                 break
             if remove_non_w2vec:
                 if not wi in self.w2vec_w2id:
-                    print('w2vec')
                     continue
             wi = cleaner(wi)
-            print(wi)
             nodes.add(wi)
             if remove_duplicate_phrases:
                 if '_' in wi:
@@ -200,8 +193,6 @@ class Topicality():
 
                 else:
                     dup_g.add_edge(i,wi)
-
-        print(len(nodes))
         #nodes = set([Index[i] for i in sort[0:nwords] if ps[i]<freq_cut and ents_normed[i]<topicality_cut])
         if add_k_neighbors>0:
             # locate meaningful cut
