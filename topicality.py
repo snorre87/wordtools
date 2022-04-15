@@ -199,6 +199,7 @@ class Topicality():
                 else:
                     dup_g.add_edge(i,wi)
 
+        print(len(nodes))
         #nodes = set([Index[i] for i in sort[0:nwords] if ps[i]<freq_cut and ents_normed[i]<topicality_cut])
         if add_k_neighbors>0:
             # locate meaningful cut
