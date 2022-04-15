@@ -167,7 +167,7 @@ class Topicality():
                                 suspects.add(n)
                         dup_g.add_edge(i,part)
                     if len(suspects)>0:
-                        remove = set()
+                        out = set()
                         idx = bow[:,i]
                         s = idx.sum()
                         for j in suspects:
