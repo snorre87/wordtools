@@ -175,6 +175,7 @@ class Topicality():
                             s2 = idxj.sum()
                             overlap = idx.T.dot(idxj).sum()
                             if overlap/(min(s,s2))>dupe_cut:
+                                print(Index[i],Index[j])
                                 if s2>=s:
                                     out.add(i)
                                     break
