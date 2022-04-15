@@ -153,16 +153,21 @@ class Topicality():
                 break
             wi = Index[i]
             if custom_filter(wi):
-                print('yo')
+                print('custom')
                 continue
             if ps[i]>=freq_cut:
+                print('freq')
                 continue
             if ents_normed[i]>topicality_cut:
+                print('topicality_cut')
                 break
             if remove_non_w2vec:
                 if not wi in self.w2vec_w2id:
+                    print('w2vec')
                     continue
-            nodes.add(cleaner(wi))
+            wi = cleaner(wi)
+            print(wi)
+            nodes.add(wi)
             if remove_duplicate_phrases:
                 if '_' in wi:
                     suspects = set()
