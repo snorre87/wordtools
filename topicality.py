@@ -334,7 +334,7 @@ def run_w2vec(texts,known_phrases=[], return_phrased=False,return_counter=False,
     ws = dict(ws.most_common(max_words))
     min_words = 2000000
     iter_ = min_words//count
-    iter_ = max(iter_,3)
+    iter_ = min(max(iter_,3),10)
     size = calculate_w2vec_size(count)
     w2v = Word2Vec(vector_size=size,workers=workers,negative=10,window=window,min_count=min_count) # max_final_vocab = max_words
     w2v.build_vocab_from_freq(ws)
