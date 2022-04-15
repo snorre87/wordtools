@@ -127,12 +127,14 @@ class Topicality():
         return fig,ax
 
     def visualize_topical_words(self,nwords=1000,topn_visible=300,add_k_neighbors=0,norm_window = 15,return_data=False,freq_cut=0.5,topicality_cut_quantile=0.25
-    ,clustering = sklearn.cluster.KMeans(n_clusters=20),reducer='umap',remove_duplicate_phrases=True,dupe_cut=0.95):
+    ,clustering = sklearn.cluster.KMeans(n_clusters=20),reducer='umap',remove_duplicate_phrases=True,dupe_cut=0.95,remove_non_w2vec=True,cleaner=lambda x: x.strip('.,)(_!?"'),custom_filter=lambda x: x):
         """Function for visualizing topical words in w2vec reduced 2d space. Topical words are based on the relative (to neighbors of similar occurrence of each word) entropy of the weighted and tfidf normalized co-occurrence network.
         Choose number of words to include (nwords), and how many should be visible (topn_visible). Choose to add neighbors using w2vec for attenuating clusters.
         Return fig,ax, and optionally a dataframe consisting of 2d coordinates and cluster categories.
         Choose between clustering algorithms: 'agglomerative','kmeans','networkbased'
         remove_duplicate_phrases will remove multiwords that share stems, keeping only the most topical.
+        remove_non_w2vec means removing phrases not found by collocation detection.
+        Use custom_filter to remove certain patterns: e.g. lambda x: x.isdigit()
         """
         ents = self.entropy_w
         w = norm_window
@@ -149,14 +151,16 @@ class Topicality():
             if len(nodes)>nwords:
                 break
             wi = Index[i]
+            if custom_filter(wi):
+                continue
             if ps[i]>=freq_cut:
                 continue
             if ents_normed[i]>topicality_cut:
                 break
-            if not wi in self.w2vec_w2id:
-                print(wi)
-                continue
-            nodes.add(wi)
+            if remove_non_w2vec:
+                if not wi in self.w2vec_w2id:
+                    continue
+            nodes.add(cleaner(wi))
             if remove_duplicate_phrases:
                 if '_' in wi:
                     suspects = set()
