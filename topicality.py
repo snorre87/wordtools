@@ -151,6 +151,7 @@ class Topicality():
         print(len(sort))
         for i in sort:
             if len(nodes)>nwords:
+                print(len(nodes))
                 break
             wi = Index[i]
             if custom_filter(wi):
