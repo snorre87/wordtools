@@ -175,7 +175,6 @@ class Topicality():
                             s2 = idxj.sum()
                             overlap = idx.T.dot(idxj).sum()
                             if overlap/(min(s,s2))>dupe_cut:
-                                print(Index[i],Index[j])
                                 if s2>=s:
                                     out.add(i)
                                     break
@@ -190,7 +189,6 @@ class Topicality():
                     dup_g.add_edge(i,wi)
 
         #nodes = set([Index[i] for i in sort[0:nwords] if ps[i]<freq_cut and ents_normed[i]<topicality_cut])
-        print(len(nodes))
         if add_k_neighbors>0:
             # locate meaningful cut
             sort = ents_normed.argsort()
