@@ -105,7 +105,7 @@ class Topicality():
         df = df.drop_duplicates(['w'],keep='first')
         df = df.groupby('category').apply(relative_count)
         fig,ax = plt.subplots()
-        fig.set_size_inches(18,12)
+        fig.set_size_inches(20,15)
         for group,groupdf in df.groupby('category'):
             color = groupdf.color.values[0]
             plt.scatter(groupdf.x_w,groupdf.y_w,color=color)
