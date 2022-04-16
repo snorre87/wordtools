@@ -110,13 +110,13 @@ class Topicality():
         fig.set_size_inches(20,15)
         for group,groupdf in df.groupby('category'):
             color = groupdf.color.values[0]
-            plt.scatter(groupdf.x_w,groupdf.y_w,color=color)
+            plt.scatter(groupdf.x_w,groupdf.y_w,color=color,alpha=0.5)
         pos_umap = {n:tuple(df.iloc[num][['x_w','y_w']]) for num,n in enumerate(df.w.values)}
         if topn:
             df = df.sort_values('rel_count').tail(topn)
         texts = []
         for i in df.w.values:
-          texts.append(plt.text(pos_umap[i][0],pos_umap[i][1],i))
+          texts.append(plt.text(pos_umap[i][0],pos_umap[i][1],i,fontweight='bold'))
         print('Adjusting texts: May take some time...')
         from adjustText import adjust_text
         adjust_text(texts)
