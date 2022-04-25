@@ -5,6 +5,7 @@ from gensim.models.phrases import Phrases
 import logging
 import re
 import nltk
+import random
 nltk.download('punkt')
 from gensim.models.word2vec import Word2Vec
 from collections import Counter
@@ -96,7 +97,8 @@ class Topicality():
             print('Clustering')
             labels = clustering.fit_predict(mat)
             w2group = {words[i]:labels[i] for i in range(len(labels))}
-        groups = set(w2group.values())
+        groups = list(set(w2group.values()))
+        random.shuffle(groups)
         # gist rainbow or tab20 or spectral gist_ncar
         g2color = {i:cmap(num/len(groups)) for num,i in enumerate(groups)}
         df['color'] = [g2color[w2group[w]] for w in df['w'].values]
