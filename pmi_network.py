@@ -52,7 +52,7 @@ def add_community_relative_degree(g):
         for n,rel_d in zip(nodes,rel_deg):
             g.nodes[n]['relative_degree'] = rel_d
     return g
-def generate_pmi_network(docs,min_cut = 10,maximum_nodes = 10000,w2vec_pretrained=False,w2vec_path=False,clean=lambda x:x, pmi_smoothing=10,topn = 100000,return_knn=False,add_community=False):
+def generate_pmi_network(docs,min_cut = 10,maximum_nodes = 10000,w2vec_pretrained=False,w2vec_path=False,clean=lambda x:x, pmi_smoothing=10,topn = 100000,return_knn=False,add_community=False,add_w2vec_dist=False):
     cut = min_cut
     c = Counter()
     c2 = Counter()
@@ -103,8 +103,8 @@ def generate_pmi_network(docs,min_cut = 10,maximum_nodes = 10000,w2vec_pretraine
     docs = docs2
 
 
-    w2vec_isinstalled = 'gensim' in dir()
-    if w2vec_isinstalled:
+    w2vec_isinstalled = 'gensim' in globals()
+    if w2vec_isinstalled and add_w2vec_dist:
         if type(w2vec_pretrained) == type(False):
             if type(w2vec_pretrained)==str:
                 ent2v = pickle.load(open(w2vec_pretrained,'rb'))
@@ -196,7 +196,7 @@ def generate_pmi_network(docs,min_cut = 10,maximum_nodes = 10000,w2vec_pretraine
     if return_knn:
         return g,knn
     if add_community:
-        if 'community' in dir():
+        if 'community' in globals():
             g = add_community_relative_degree(g)
         else:
             print('Community module is not installed. Will not add community information.')
