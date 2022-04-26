@@ -133,7 +133,7 @@ class Topicality():
         return fig,ax
 
     def visualize_topical_words(self,nwords=1000,topn_visible=300,add_k_neighbors=0,norm_window = 15,return_data=False,freq_cut=0.5,topicality_cut_quantile=0.25
-    ,clustering = sklearn.cluster.KMeans(n_clusters=20),reducer='umap',remove_duplicate_phrases=True,dupe_cut=0.95,remove_non_w2vec=True,cleaner=lambda x: x.strip('.,)(_!?"'),custom_filter=lambda x: x,figsize=(30,20)):
+    ,clustering = sklearn.cluster.KMeans(n_clusters=20),reducer='umap',remove_duplicate_phrases=True,dupe_cut=0.95,remove_non_w2vec=True,cleaner=lambda x: x.strip('.,)(_!?"'),custom_filter=lambda x: not x,figsize=(30,20)):
         """Function for visualizing topical words in w2vec reduced 2d space. Topical words are based on the relative (to neighbors of similar occurrence of each word) entropy of the weighted and tfidf normalized co-occurrence network.
         Choose number of words to include (nwords), and how many should be visible (topn_visible). Choose to add neighbors using w2vec for attenuating clusters.
         Return fig,ax, and optionally a dataframe consisting of 2d coordinates and cluster categories.
