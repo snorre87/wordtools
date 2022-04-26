@@ -2,13 +2,17 @@ import os
 try:
     import community
 except:
-    os.system('pip install python-louvain')
-    import community
+    inp = input('The community module is not installed. Do you want to install? Press y. Can work without.')
+    if inp =='y':
+        os.system('pip install python-louvain')
+        import community
 try:
     import gensim
 except:
-    os.system('pip install gensim -U --quiet')
-    import gensim
+    inp = input('The gensim module is not installed. Do you want to install? Press y. Can work without.')
+    if inp =='y':
+        os.system('pip install gensim -U --quiet')
+        import gensim
 try:
     import run_w2vec as W2V
 except:
@@ -72,7 +76,6 @@ def generate_pmi_network(docs,min_cut = 10,maximum_nodes = 10000,w2vec_pretraine
         if e in e2e:
             return e2e[e]
         return e
-    print(len(g),len(e2e))
     del c2
     c = Counter()
     docs2 = []
@@ -91,19 +94,23 @@ def generate_pmi_network(docs,min_cut = 10,maximum_nodes = 10000,w2vec_pretraine
     keep = set([i for i,count in c.most_common(maximum_nodes) if count>=cut])
     print('%d nodes are kept'%len(keep))
     docs = docs2
-    if type(w2vec_pretrained) == type(False):
-        if type(w2vec_pretrained)==str:
-            ent2v = pickle.load(open(w2vec_pretrained,'rb'))
-        else:
-            if os.path.isfile(w2vec_path):
-                ent2v = pickle.load(open(w2vec_path,'rb'))
+
+
+    w2vec_isinstalled = 'gensim' in dir()
+    if w2vec_isinstalled:
+        if type(w2vec_pretrained) == type(False):
+            if type(w2vec_pretrained)==str:
+                ent2v = pickle.load(open(w2vec_pretrained,'rb'))
             else:
-                print('W2VEC training')
-                ent2v = W2V.run_w2vec(docs,phrases=False,emb_size=128)
-                if type(w2vec_path)==str:
-                    pickle.dump(ent2v,open(w2vec_path,'wb'))
-    else:
-        ent2v = w2vec_pretrained
+                if os.path.isfile(w2vec_path):
+                    ent2v = pickle.load(open(w2vec_path,'rb'))
+                else:
+                    print('W2VEC training')
+                    ent2v = W2V.run_w2vec(docs,phrases=False,emb_size=128)
+                    if type(w2vec_path)==str:
+                        pickle.dump(ent2v,open(w2vec_path,'wb'))
+        else:
+            ent2v = w2vec_pretrained
     n_docs = len(l)
     print('Start characterizing edges')
     edges = []
@@ -126,19 +133,23 @@ def generate_pmi_network(docs,min_cut = 10,maximum_nodes = 10000,w2vec_pretraine
     pmis = Counter(pmis)
 
     # W2vec distance
-    edge2dist = {}
-    error= 0
-    for n,n2 in tqdm.tqdm(pmis):
-        try:
-            dist = ent2v.wv.distance(n,n2)
-        except:
-            error+=1
-            dist = np.nan
-        edge2dist[tuple(sorted([n,n2]))] = dist
+    if w2vec_isinstalled:
+        edge2dist = {}
+        error= 0
+        for n,n2 in tqdm.tqdm(pmis):
+            try:
+                dist = ent2v.wv.distance(n,n2)
+            except:
+                error+=1
+                dist = np.nan
+            edge2dist[tuple(sorted([n,n2]))] = dist
     g = nx.Graph()
     for edge,pmi in pmis.most_common(topn):
         n,n2 = edge
-        dist = edge2dist[edge]
+        if w2vec_isinstalled:
+            dist = edge2dist[edge]
+        else:
+            dist = np.nan
         count = edge_c[edge]
         #t,t2 = e2typ[n],e2typ[n2]
         g.add_node(n,**{'n_docs':c[n]})
@@ -150,7 +161,6 @@ def generate_pmi_network(docs,min_cut = 10,maximum_nodes = 10000,w2vec_pretraine
         d = set(g[n])
         d2 = set(g[n2])
         edge2jacc[edge] = jaccard_d(d,d2)
-
     knn = nx.DiGraph()
     for n in tqdm.tqdm(list(g)):
         #t = e2typ[n]
@@ -179,5 +189,8 @@ def generate_pmi_network(docs,min_cut = 10,maximum_nodes = 10000,w2vec_pretraine
     if return_knn:
         return g,knn
     if add_community:
-        g = add_community_relative_degree(g)
+        if 'community' in dir():
+            g = add_community_relative_degree(g)
+        else:
+            print('Community module is not installed. Will not add community information.')
     return g
