@@ -266,7 +266,11 @@ def draw_network_quick(g,label_p=0.75,adjust_text=False):
     fig = plt.figure(figsize=(30,20))
     nx.draw_networkx_nodes(g,pos=pos,node_color=colors)
     nx.draw_networkx_edges(g,pos=pos)
-    labels = nx.draw_networkx_labels(nx.subgraph(g,top),pos=pos)
+    labels = []
+    for i in top:
+        labels.append(plt.text(pos[i][0],pos[i][1],i,fontweight='bold'))
+
+    #labels = nx.draw_networkx_labels(nx.subgraph(g,top),pos=pos)
     if adjust_text:
         try:
             from adjustText import adjust_text
