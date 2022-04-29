@@ -58,6 +58,7 @@ def add_community_relative_degree(g):
 
 def resolve_docs(docs,e2e,clean):
     docs2 = []
+    c = Counter()
     for doc in docs:
         l = []
         for w in doc:
@@ -68,7 +69,7 @@ def resolve_docs(docs,e2e,clean):
             l.append(w)
             c[w]+=1
         docs2.append(l)
-    return doc2
+    return docs2,c
 def resolve_ent(e,e2e):
     if e in e2e:
         return e2e[e]
@@ -110,8 +111,7 @@ def generate_similarity_network(docs,min_cut = 10,maximum_nodes = 10000,topn_edg
             ent = list(g[e2].keys())[0]
             e2e[e]=ent
     del c2
-    c = Counter()
-    docs = resolve_docs(docs,e2e,clean)
+    docs,c = resolve_docs(docs,e2e,clean)
     keep = set([i for i,count in c.most_common(maximum_nodes) if count>=cut])
     print('%d nodes are kept'%len(keep))
     if target_average_degree!=False:
@@ -128,7 +128,7 @@ def generate_similarity_network(docs,min_cut = 10,maximum_nodes = 10000,topn_edg
                 else:
                     print('W2VEC training')
                     if type(w2vec_docs)!=type(bool):
-                        w2vec_docs = resolve_docs(w2vec_docs,e2e,clean)
+                        w2vec_docs,c = resolve_docs(w2vec_docs,e2e,clean)
                         ent2v = W2V.run_w2vec(w2vec_docs,phrases=False)
                     else:
                         ent2v = W2V.run_w2vec(docs,phrases=False)
