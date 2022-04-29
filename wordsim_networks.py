@@ -248,6 +248,7 @@ clean=lambda x:x, pmi_smoothing=10,return_knn=False
             return g,knn
     return g
 def draw_network_quick(g,label_p=0.5):
+    import matplotlib.pyplot as plt
     try:
         sort = sorted(g,key=lambda x: g.nodes[x]['relative_degree'],reverse=True)
     except:
