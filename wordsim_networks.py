@@ -69,6 +69,10 @@ def resolve_docs(docs,e2e,clean):
             c[w]+=1
         docs2.append(l)
     return doc2
+def resolve_ent(e,e2e):
+    if e in e2e:
+        return e2e[e]
+    return e
 def generate_similarity_network(docs,min_cut = 10,maximum_nodes = 10000,topn_edges = 100000,target_average_degree=False,sorting_measure='pmi',w2vec_pretrained=False,w2vec_path=False,clean=lambda x:x, pmi_smoothing=10,topn = 100000,return_knn=False,add_community=False,add_w2vec_sim=True,add_knn_info=True,w2vec_docs=False):
     """Function for creating a network out of documents. It calculates pmi, jaccard similarity, and word2vec similarity of entities/words, and creates a network out of the X most similar words.
     Choose min_cut and or maximum_nodes to include only tokens with a mininum count and a maximum number of nodes.
@@ -105,10 +109,6 @@ def generate_similarity_network(docs,min_cut = 10,maximum_nodes = 10000,topn_edg
         if g.has_node(e2):
             ent = list(g[e2].keys())[0]
             e2e[e]=ent
-    def resolve_ent(e,e2e=e2e):
-        if e in e2e:
-            return e2e[e]
-        return e
     del c2
     c = Counter()
     docs = resolve_docs(docs,e2e,clean)
