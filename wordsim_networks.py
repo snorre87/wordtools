@@ -270,7 +270,12 @@ def draw_network_quick(g,label_p=0.75,adjust_text=False):
     if adjust_text:
         try:
             from adjustText import adjust_text
-            adjust_text(labels)
         except:
             print('adjustText not installed. pip install adjustText')
+
+        try:
+            adjust_text(labels)
+        except:
+            pass
+
     return fig
