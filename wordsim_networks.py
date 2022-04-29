@@ -135,7 +135,7 @@ def generate_similarity_network(docs,min_cut = 10,maximum_nodes = 10000,topn_edg
                         pickle.dump(ent2v,open(w2vec_path,'wb'))
         else:
             ent2v = w2vec_pretrained
-    n_docs = len(l)
+    n_docs = len(docs)
     print('Start characterizing edges')
     edges = []
     for doc in docs:
