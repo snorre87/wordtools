@@ -1,4 +1,6 @@
 import os
+version = 0.1
+author = 'Snorre Ralund, PhD'
 try:
     import networkx as nx
 except:
@@ -23,6 +25,7 @@ except:
 try:
     import run_w2vec as W2V
 except:
+    print("Collecting script to estimate word2vec heuristically.")
     os.system('curl https://raw.githubusercontent.com/snorre87/wordviz/main/run_w2vec.py > run_w2vec.py')
     import run_w2vec as W2V
 import pickle
@@ -52,8 +55,14 @@ def add_community_relative_degree(g):
         for n,rel_d in zip(nodes,rel_deg):
             g.nodes[n]['relative_degree'] = rel_d
     return g
-def generate_pmi_network(docs,min_cut = 10,maximum_nodes = 10000,w2vec_pretrained=False,w2vec_path=False,clean=lambda x:x, pmi_smoothing=10,topn = 100000,return_knn=False,add_community=False,add_w2vec_dist=False):
+def generate_pmi_network(docs,min_cut = 10,maximum_nodes = 10000,topn_edges = 100000,sorting_measure='pmi',w2vec_pretrained=False,w2vec_path=False,clean=lambda x:x, pmi_smoothing=10,topn = 100000,return_knn=False,add_community=False,add_w2vec_dist=False,add_knn_info=True):
+    """Function for creating a network out of documents. It calculates pmi, jaccard similarity, and word2vec similarity of entities/words, and creates a network out of the X most similar words.
+    Choose min_cut and or maximum_nodes to include only tokens with a mininum count and a maximum number of nodes.
+    sorting_measure: Choose which similarity measure should be used to define the network> 'pmi','w2vec','jaccard'.
+    topn_edges: number of most similar edges to include.
+    """
     cut = min_cut
+    topn = topn_edges
     c = Counter()
     c2 = Counter()
     for doc in docs:
@@ -141,60 +150,71 @@ def generate_pmi_network(docs,min_cut = 10,maximum_nodes = 10000,w2vec_pretraine
 
     # W2vec distance
     if w2vec_isinstalled:
-        edge2dist = {}
+        edge2sim = {}
         error= 0
         for n,n2 in tqdm.tqdm(pmis):
             try:
-                dist = ent2v.wv.distance(n,n2)
+                sim = 1-ent2v.wv.distance(n,n2)
             except:
                 error+=1
-                dist = np.nan
-            edge2dist[tuple(sorted([n,n2]))] = dist
+                # assume 1
+                sim = 0
+            edge2sim[tuple(sorted([n,n2]))] = sim
+        edge2sim = Counter(edge2sim)
     g = nx.Graph()
-    for edge,pmi in pmis.most_common(topn):
-        n,n2 = edge
-        if w2vec_isinstalled:
-            dist = edge2dist[edge]
-        else:
-            dist = np.nan
-        count = edge_c[edge]
-        #t,t2 = e2typ[n],e2typ[n2]
-        g.add_node(n,**{'n_docs':c[n]})
-        g.add_node(n2,**{'n_docs':c[n2]})
-        g.add_edge(n,n2,**{'w2vec_dist':dist,'pmi':pmi,'count':count})
     edge2jacc = {}
-    for edge,count in tqdm.tqdm(pmis.most_common(topn)):
+    for edge in tqdm.tqdm(pmis):
         n,n2 = edge
         d = set(g[n])
         d2 = set(g[n2])
         edge2jacc[edge] = jaccard_d(d,d2)
-    knn = nx.DiGraph()
-    for n in tqdm.tqdm(list(g)):
-        #t = e2typ[n]
-        #g.add_node(n,**{'type':t,'n_docs':c[n]})
-        for k,n2 in enumerate(sorted(g[n],key=lambda x: g[n][x]['pmi'])):
-            d = g[n][n2].copy()
-            d['k'] = k
-            knn.add_edge(n,n2,**d)
-    for n,n2 in tqdm.tqdm(g.edges()):
-        jacc = edge2jacc[tuple(sorted([n,n2]))]
-        g[n][n2]['jacc_sim'] = jacc
-        if knn.has_edge(n,n2):
-            k1 = knn[n][n2]['k']
-            knn[n][n2]['jacc_sim'] = jacc
+    # Sorting based on pmi or w2vec or jaccard
+    edge2jacc = Counter(edge2jacc)
+    #
+    if sorting_measure=='w2vec':
+        sort = edge2sim.most_common(topn)
+    elif sorting_measure =='pmi':
+        sort = pmis.most_common(topn)
+    elif sorting_measure == 'jaccard':
+        sort = edge2jacc.most_common(topn)
+    for edge,_ in sort:
+        n,n2 = edge
+        if w2vec_isinstalled:
+            sim = edge2sim[edge]
         else:
-            k1 = np.nan
-        if knn.has_edge(n2,n):
-            k2 = knn[n2][n]['k']
-            knn[n2][n]['jacc_sim'] = jacc
-        else:
-            k2 = 999
-        g[n][n2]['k1'] = k1
-        g[n][n2]['k2'] = k2
-        g[n][n2]['min_k'] = min(k1,k2)
-        g[n][n2]['max_k'] = max(k1,k2)
-    if return_knn:
-        return g,knn
+            sim = np.nan
+        pmi = pmis[edge]
+        count = edge_c[edge]
+        jacc = edge2jacc[edge]
+        #t,t2 = e2typ[n],e2typ[n2]
+        g.add_node(n,**{'n_docs':c[n]})
+        g.add_node(n2,**{'n_docs':c[n2]})
+        g.add_edge(n,n2,**{'w2vec_similarity':sim,'pmi':pmi,'count':count,'jaccard_similarity':jacc})
+
+    # add knn
+    if add_knn_info:
+
+        knn = nx.DiGraph()
+        for n in tqdm.tqdm(list(g)):
+            for k,n2 in enumerate(sorted(g[n],key=lambda x: g[n][x]['pmi'])):
+                d = g[n][n2].copy()
+                d['k'] = k
+                knn.add_edge(n,n2,**d)
+        for n,n2 in tqdm.tqdm(g.edges()):
+            if knn.has_edge(n,n2):
+                k1 = knn[n][n2]['k']
+            else:
+                k1 = np.nan
+            if knn.has_edge(n2,n):
+                k2 = knn[n2][n]['k']
+            else:
+                k2 = 999
+            g[n][n2]['k1'] = k1
+            g[n][n2]['k2'] = k2
+            g[n][n2]['min_k'] = min(k1,k2)
+            g[n][n2]['max_k'] = max(k1,k2)
+        if return_knn:
+            return g,knn
     if add_community:
         if 'community' in globals():
             g = add_community_relative_degree(g)
