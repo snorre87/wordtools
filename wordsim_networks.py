@@ -143,6 +143,8 @@ def generate_similarity_network(docs,min_cut = 10,maximum_nodes = 10000,topn_edg
             n = ents[i]
             for j in range(i+1,len(ents)):
                 n2 = ents[j]
+                if n==n2:
+                    continue
                 edges.append(tuple(sorted([n,n2])))
     edge_c = Counter(edges)
     pmis = {}
