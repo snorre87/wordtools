@@ -208,7 +208,7 @@ def generate_similarity_network(docs,min_cut = 10,maximum_nodes = 10000,topn_edg
     # extract_largets component
     components = list(nx.connected_components(g))
     g = nx.subgraph(g,nbunch=max(components,key=len))
-
+    print('%d nodes in the final connected component'%len(g))
     if add_community:
         if 'community' in globals():
             g = add_community_relative_degree(g)
