@@ -62,6 +62,7 @@ def generate_similarity_network(docs,min_cut = 10,maximum_nodes = 10000,topn_edg
     topn_edges: number of most similar edges to include.
     Or use target_average_degree to choose edges by multiplying the number of nodes with an average degree.
     Add community partitions the network using the louvain modularitybased algorithm, and adds a community relative degree attribute to the nodes 'relative_degree', very useful for visualization of words.
+    add_knn_info, set to true if you want edge attributes ranking neighbors.
     """
     cut = min_cut
     topn = topn_edges
@@ -154,7 +155,7 @@ def generate_similarity_network(docs,min_cut = 10,maximum_nodes = 10000,topn_edg
         m = count/n_docs
         pmis[edge] = m/(p*p2)
     pmis = Counter(pmis)
-
+    print('PMI done.')
     # W2vec distance
     if w2vec_isinstalled:
         edge2sim = {}
@@ -168,6 +169,7 @@ def generate_similarity_network(docs,min_cut = 10,maximum_nodes = 10000,topn_edg
                 sim = 0
             edge2sim[tuple(sorted([n,n2]))] = sim
         edge2sim = Counter(edge2sim)
+        print('W2Vec done.')
     g = nx.Graph()
     edge2jacc = {}
     for edge in tqdm.tqdm(pmis):
@@ -176,9 +178,11 @@ def generate_similarity_network(docs,min_cut = 10,maximum_nodes = 10000,topn_edg
         d2 = set(g[n2])
         edge2jacc[edge] = jaccard_d(d,d2)
     # Sorting based on pmi or w2vec or jaccard
+    print('Jaccard done.')
     edge2jacc = Counter(edge2jacc)
     #
     if sorting_measure=='w2vec':
+        assert 'edge2sim' in dir(),'Word2vec is not esimated. Install gensim or set sorting mechanism to pmi or jaccard. Will abort.'
         sort = edge2sim.most_common(topn)
     elif sorting_measure =='pmi':
         sort = pmis.most_common(topn)
