@@ -55,7 +55,21 @@ def add_community_relative_degree(g):
         for n,rel_d in zip(nodes,rel_deg):
             g.nodes[n]['relative_degree'] = rel_d
     return g
-def generate_similarity_network(docs,min_cut = 10,maximum_nodes = 10000,topn_edges = 100000,target_average_degree=False,sorting_measure='pmi',w2vec_pretrained=False,w2vec_path=False,clean=lambda x:x, pmi_smoothing=10,topn = 100000,return_knn=False,add_community=False,add_w2vec_sim=True,add_knn_info=True,w2word_docs=False):
+
+def resolve_docs(docs,e2e,clean):
+    docs2 = []
+    for doc in docs:
+        l = []
+        for w in doc:
+            w = clean(w)
+            if len(w)==0:
+                continue
+            w = resolve_ent(w,e2e)
+            l.append(w)
+            c[w]+=1
+        docs2.append(l)
+    return doc2
+def generate_similarity_network(docs,min_cut = 10,maximum_nodes = 10000,topn_edges = 100000,target_average_degree=False,sorting_measure='pmi',w2vec_pretrained=False,w2vec_path=False,clean=lambda x:x, pmi_smoothing=10,topn = 100000,return_knn=False,add_community=False,add_w2vec_sim=True,add_knn_info=True,w2vec_docs=False):
     """Function for creating a network out of documents. It calculates pmi, jaccard similarity, and word2vec similarity of entities/words, and creates a network out of the X most similar words.
     Choose min_cut and or maximum_nodes to include only tokens with a mininum count and a maximum number of nodes.
     sorting_measure: Choose which similarity measure should be used to define the network> 'pmi','w2vec','jaccard'.
@@ -97,26 +111,12 @@ def generate_similarity_network(docs,min_cut = 10,maximum_nodes = 10000,topn_edg
         return e
     del c2
     c = Counter()
-    docs2 = []
-    for doc in docs:
-        l = []
-        for w in doc:
-            w = clean(w)
-            if len(w)==0:
-                continue
-            w = resolve_ent(w,e2e)
-
-            l.append(w)
-            c[w]+=1
-        docs2.append(l)
-
+    docs = resolve_docs(docs,e2e,clean)
     keep = set([i for i,count in c.most_common(maximum_nodes) if count>=cut])
     print('%d nodes are kept'%len(keep))
     if target_average_degree!=False:
         topn = int(target_average_degree*len(keep))
     docs = docs2
-
-
     w2vec_isinstalled = 'gensim' in globals()
     if w2vec_isinstalled and add_w2vec_sim:
         if type(w2vec_pretrained) == type(False):
@@ -128,6 +128,7 @@ def generate_similarity_network(docs,min_cut = 10,maximum_nodes = 10000,topn_edg
                 else:
                     print('W2VEC training')
                     if type(w2vec_docs)!=type(bool):
+                        w2vec_docs = resolve_docs(w2vec_docs,e2e,clean)
                         ent2v = W2V.run_w2vec(w2vec_docs,phrases=False)
                     else:
                         ent2v = W2V.run_w2vec(docs,phrases=False)
