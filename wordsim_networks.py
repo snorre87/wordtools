@@ -73,7 +73,7 @@ def resolve_ent(e,e2e):
     if e in e2e:
         return e2e[e]
     return e
-def generate_similarity_network(docs,min_cut = 10,maximum_nodes = 10000,topn_edges = 100000,target_average_degree=False,sorting_measure='pmi',w2vec_pretrained=False,w2vec_path=False,clean=lambda x:x, pmi_smoothing=10,topn = 100000,return_knn=False,add_community=False,add_w2vec_sim=True,add_knn_info=True,w2vec_docs=False):
+def generate_similarity_network(docs,min_cut = 10,maximum_nodes = 10000,topn_edges = 100000,target_average_degree=False,sorting_measure='pmi',w2vec_pretrained=False,w2vec_path=False,clean=lambda x:x, pmi_smoothing=10,topn = 100000,return_knn=False,add_community=False,add_w2vec_sim=True,add_knn_info=True,w2vec_docs=False,remove_self_edges=False):
     """Function for creating a network out of documents. It calculates pmi, jaccard similarity, and word2vec similarity of entities/words, and creates a network out of the X most similar words.
     Choose min_cut and or maximum_nodes to include only tokens with a mininum count and a maximum number of nodes.
     sorting_measure: Choose which similarity measure should be used to define the network> 'pmi','w2vec'.
@@ -143,8 +143,9 @@ def generate_similarity_network(docs,min_cut = 10,maximum_nodes = 10000,topn_edg
             n = ents[i]
             for j in range(i+1,len(ents)):
                 n2 = ents[j]
-                if n==n2:
-                    continue
+                if remove_self_edges:
+                    if n==n2:
+                        continue
                 edges.append(tuple(sorted([n,n2])))
     edge_c = Counter(edges)
     pmis = {}
@@ -194,14 +195,14 @@ def generate_similarity_network(docs,min_cut = 10,maximum_nodes = 10000,topn_edg
         g.add_edge(n,n2,**{'w2vec_similarity':sim,'pmi':pmi,'count':count})
 
     edge2jacc = Counter()
-    for edge in tqdm.tqdm(sort):
+    for edge,_ in tqdm.tqdm(sort):
         n,n2 = edge
         d = set(g[n])
         d2 = set(g[n2])
         edge2jacc[edge] = jaccard_d(d,d2)
     # Sorting based on pmi or w2vec or jaccard
     print('Jaccard done.')
-    for edge in sort:
+    for edge,_ in sort:
         jacc = edge2jacc[edge]
         g[edge[0]][edge[1]]['jaccard_similarity'] = jacc
     # extract_largets component
