@@ -112,7 +112,7 @@ def generate_similarity_network(docs,min_cut = 10,maximum_nodes = 10000,topn_edg
     del c2
     docs,c = resolve_docs(docs,e2e,clean)
     keep = set([i for i,count in c.most_common(maximum_nodes) if count>=cut])
-    print('%d nodes are kept'%len(keep))
+    print('%d nodes are kept using minimum cut.'%len(keep))
     if target_average_degree!=False:
         topn = int(target_average_degree*len(keep))
     w2vec_isinstalled = 'gensim' in globals()
