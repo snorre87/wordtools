@@ -186,7 +186,6 @@ def generate_similarity_network(docs,min_cut = 10,maximum_nodes = 10000,topn_edg
             sim = np.nan
         pmi = pmis[edge]
         count = edge_c[edge]
-        jacc = edge2jacc[edge]
         #t,t2 = e2typ[n],e2typ[n2]
         g.add_node(n,**{'n_docs':c[n]})
         g.add_node(n2,**{'n_docs':c[n2]})
