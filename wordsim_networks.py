@@ -55,11 +55,12 @@ def add_community_relative_degree(g):
         for n,rel_d in zip(nodes,rel_deg):
             g.nodes[n]['relative_degree'] = rel_d
     return g
-def generate_similarity_network(docs,min_cut = 10,maximum_nodes = 10000,topn_edges = 100000,sorting_measure='pmi',w2vec_pretrained=False,w2vec_path=False,clean=lambda x:x, pmi_smoothing=10,topn = 100000,return_knn=False,add_community=False,add_w2vec_dist=False,add_knn_info=True):
+def generate_similarity_network(docs,min_cut = 10,maximum_nodes = 10000,topn_edges = 100000,target_average_degree=False,sorting_measure='pmi',w2vec_pretrained=False,w2vec_path=False,clean=lambda x:x, pmi_smoothing=10,topn = 100000,return_knn=False,add_community=False,add_w2vec_dist=False,add_knn_info=True,w2word_docs=False):
     """Function for creating a network out of documents. It calculates pmi, jaccard similarity, and word2vec similarity of entities/words, and creates a network out of the X most similar words.
     Choose min_cut and or maximum_nodes to include only tokens with a mininum count and a maximum number of nodes.
     sorting_measure: Choose which similarity measure should be used to define the network> 'pmi','w2vec','jaccard'.
     topn_edges: number of most similar edges to include.
+    Or use target_average_degree to choose edges by multiplying the number of nodes with an average degree.
     Add community partitions the network using the louvain modularitybased algorithm, and adds a community relative degree attribute to the nodes 'relative_degree', very useful for visualization of words.
     """
     cut = min_cut
@@ -110,6 +111,8 @@ def generate_similarity_network(docs,min_cut = 10,maximum_nodes = 10000,topn_edg
 
     keep = set([i for i,count in c.most_common(maximum_nodes) if count>=cut])
     print('%d nodes are kept'%len(keep))
+    if target_average_degree!=False:
+        topn = int(target_average_degree*len(keep))
     docs = docs2
 
 
@@ -123,7 +126,10 @@ def generate_similarity_network(docs,min_cut = 10,maximum_nodes = 10000,topn_edg
                     ent2v = pickle.load(open(w2vec_path,'rb'))
                 else:
                     print('W2VEC training')
-                    ent2v = W2V.run_w2vec(docs,phrases=False,emb_size=128)
+                    if type(w2vec_docs)!=type(bool):
+                        ent2v = W2V.run_w2vec(w2vec_docs,phrases=False)
+                    else:
+                        ent2v = W2V.run_w2vec(docs,phrases=False)
                     if type(w2vec_path)==str:
                         pickle.dump(ent2v,open(w2vec_path,'wb'))
         else:
@@ -191,7 +197,9 @@ def generate_similarity_network(docs,min_cut = 10,maximum_nodes = 10000,topn_edg
         g.add_node(n,**{'n_docs':c[n]})
         g.add_node(n2,**{'n_docs':c[n2]})
         g.add_edge(n,n2,**{'w2vec_similarity':sim,'pmi':pmi,'count':count,'jaccard_similarity':jacc})
-
+    # extract_largets component
+    components = list(nx.connected_components(g))
+    g = nx.subgraph(g,nodes=max(components,key=len))
     if add_community:
         if 'community' in globals():
             g = add_community_relative_degree(g)
