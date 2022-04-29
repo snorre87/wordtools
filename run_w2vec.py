@@ -8,11 +8,16 @@ from collections import Counter
 import random
 import nltk
 nltk.download('punkt')
+def calculate_w2vec_size(count):
+  count = count/1000000
+  base_size = 64
+  return min(max(32,base_size*(int(np.log2(count)-1))),256)
+
 def replace_phrases(text,phrases):
     for i in phrases:
         text = text.replace(i,'_'.join(i.split()))
     return text
-def run_w2vec(texts,emb_size=64,known_phrases=[], return_phrased=False,return_counter=False,kwargs={},phrases=True):
+def run_w2vec(texts,emb_size=False,known_phrases=[], return_phrased=False,return_counter=False,kwargs={},phrases=True):
     if type(texts[0])==str:
 
 
@@ -42,7 +47,11 @@ def run_w2vec(texts,emb_size=64,known_phrases=[], return_phrased=False,return_co
     min_count=5 # Number of Occurrences to be kept in the Vocabulary
     count = 0
     ws = Counter()
-
+    if not emb_size:
+        count = 0
+        for doc in docs:
+            count+=len(doc)
+        emb_size = calculate_w2vec_size(count)
     if phrases:
         new_docs = docs+phrase_docs_bi+phrase_docs
     else:
