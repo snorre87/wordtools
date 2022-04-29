@@ -114,7 +114,7 @@ def generate_similarity_network(docs,min_cut = 10,maximum_nodes = 10000,topn_edg
     if target_average_degree!=False:
         topn = int(target_average_degree*len(keep))
     docs = docs2
-    
+
 
     w2vec_isinstalled = 'gensim' in globals()
     if w2vec_isinstalled and add_w2vec_sim:
