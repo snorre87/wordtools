@@ -76,7 +76,8 @@ def resolve_ent(e,e2e):
 def generate_similarity_network(docs,min_cut = 10,maximum_nodes = 10000,topn_edges = 100000,target_average_degree=False,
 sorting_measure='pmi',w2vec_pretrained=False,w2vec_path=False,
 clean=lambda x:x, pmi_smoothing=10,return_knn=False
-,add_community=True,add_w2vec_sim=True,add_knn_info=True,w2vec_docs=False,remove_self_edges=False):
+,add_community=True,add_w2vec_sim=True,add_knn_info=True,w2vec_docs=False
+,remove_self_edges=False):
     """Function for creating a network out of documents. It calculates pmi, jaccard similarity, and word2vec similarity of entities/words, and creates a network out of the X most similar words.
     Choose min_cut and or maximum_nodes to include only tokens with a mininum count and a maximum number of nodes.
     sorting_measure: Choose which similarity measure should be used to define the network> 'pmi','w2vec'.
@@ -247,7 +248,10 @@ clean=lambda x:x, pmi_smoothing=10,return_knn=False
         if return_knn:
             return g,knn
     return g
-def draw_network_quick(g,label_p=0.5):
+def draw_network_quick(g,label_p=0.75,adjust_text=False):
+    '''Function for quick visualization of networkself.
+    Choose the fraction of labels to be displayed, will be ordered by relative community degree.
+    Use the adjust_text to avoid label overlap.'''
     import matplotlib.pyplot as plt
     try:
         sort = sorted(g,key=lambda x: g.nodes[x]['relative_degree'],reverse=True)
@@ -262,5 +266,11 @@ def draw_network_quick(g,label_p=0.5):
     fig = plt.figure(figsize=(30,20))
     nx.draw_networkx_nodes(g,pos=pos,node_color=colors)
     nx.draw_networkx_edges(g,pos=pos)
-    nx.draw_networkx_labels(nx.subgraph(g,top),pos=pos)
+    labels = nx.draw_networkx_labels(nx.subgraph(g,top),pos=pos)
+    if adjust_text:
+        try:
+            from adjustText import adjust_text
+            adjust_text(labels)
+        except:
+            print('adjustText not installed. pip install adjustText')
     return fig
