@@ -247,3 +247,19 @@ clean=lambda x:x, pmi_smoothing=10,return_knn=False
         if return_knn:
             return g,knn
     return g
+def draw_network_quick(g,label_p=0.5):
+    try:
+        sort = sorted(g,key=lambda x: g.nodes[x]['relative_degree'],reverse=True)
+    except:
+        print('will add community info')
+        g = add_community_relative_degree(g)
+        sort = sorted(g,key=lambda x: g.nodes[x]['relative_degree'],reverse=True)
+    top = sort[:int(len(g)*label_p)]
+    community = [int(g.nodes[i]['community']) for i in g]
+    colors = [plt.cm.tab20(i/max(community)) for i in community]
+    pos = nx.spring_layout(g)
+    fig = plt.figure(figsize=(30,20))
+    nx.draw_networkx_nodes(g,pos=pos,node_color=colors)
+    nx.draw_networkx_edges(g,pos=pos)
+    nx.draw_networkx_labels(nx.subgraph(g,top),pos=pos)
+    return fig
