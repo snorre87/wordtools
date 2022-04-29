@@ -277,6 +277,6 @@ def draw_network_quick(g,label_p=0.75,adjust_text=False):
             print('Adjusting text. May take a while...')
             adjust_text(labels)
         except:
-            pass
+            print('Error')
 
     return fig
