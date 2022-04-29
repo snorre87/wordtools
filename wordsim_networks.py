@@ -37,7 +37,6 @@ import os
 def jaccard_d(d,d2):
     nom = len(d&d2)
     return nom/len(d|d2)
-
 from community import community_louvain
 def add_community_relative_degree(g):
     part = community_louvain.best_partition(g)
@@ -77,7 +76,7 @@ def resolve_ent(e,e2e):
 def generate_similarity_network(docs,min_cut = 10,maximum_nodes = 10000,topn_edges = 100000,target_average_degree=False,sorting_measure='pmi',w2vec_pretrained=False,w2vec_path=False,clean=lambda x:x, pmi_smoothing=10,topn = 100000,return_knn=False,add_community=False,add_w2vec_sim=True,add_knn_info=True,w2vec_docs=False):
     """Function for creating a network out of documents. It calculates pmi, jaccard similarity, and word2vec similarity of entities/words, and creates a network out of the X most similar words.
     Choose min_cut and or maximum_nodes to include only tokens with a mininum count and a maximum number of nodes.
-    sorting_measure: Choose which similarity measure should be used to define the network> 'pmi','w2vec','jaccard'.
+    sorting_measure: Choose which similarity measure should be used to define the network> 'pmi','w2vec'.
     topn_edges: number of most similar edges to include.
     Or use target_average_degree to choose edges by multiplying the number of nodes with an average degree.
     Add community partitions the network using the louvain modularitybased algorithm, and adds a community relative degree attribute to the nodes 'relative_degree', very useful for visualization of words.
@@ -171,23 +170,14 @@ def generate_similarity_network(docs,min_cut = 10,maximum_nodes = 10000,topn_edg
         edge2sim = Counter(edge2sim)
         print('W2Vec done.')
     g = nx.Graph()
-    edge2jacc = {}
-    for edge in tqdm.tqdm(pmis):
-        n,n2 = edge
-        d = set(g[n])
-        d2 = set(g[n2])
-        edge2jacc[edge] = jaccard_d(d,d2)
-    # Sorting based on pmi or w2vec or jaccard
-    print('Jaccard done.')
-    edge2jacc = Counter(edge2jacc)
     #
     if sorting_measure=='w2vec':
         assert 'edge2sim' in dir(),'Word2vec is not esimated. Install gensim or set sorting mechanism to pmi or jaccard. Will abort.'
         sort = edge2sim.most_common(topn)
     elif sorting_measure =='pmi':
         sort = pmis.most_common(topn)
-    elif sorting_measure == 'jaccard':
-        sort = edge2jacc.most_common(topn)
+    #elif sorting_measure == 'jaccard':
+    #    sort = edge2jacc.most_common(topn)
     for edge,_ in sort:
         n,n2 = edge
         if w2vec_isinstalled:
@@ -200,10 +190,23 @@ def generate_similarity_network(docs,min_cut = 10,maximum_nodes = 10000,topn_edg
         #t,t2 = e2typ[n],e2typ[n2]
         g.add_node(n,**{'n_docs':c[n]})
         g.add_node(n2,**{'n_docs':c[n2]})
-        g.add_edge(n,n2,**{'w2vec_similarity':sim,'pmi':pmi,'count':count,'jaccard_similarity':jacc})
+        g.add_edge(n,n2,**{'w2vec_similarity':sim,'pmi':pmi,'count':count})
+
+    edge2jacc = Counter()
+    for edge in tqdm.tqdm(sort):
+        n,n2 = edge
+        d = set(g[n])
+        d2 = set(g[n2])
+        edge2jacc[edge] = jaccard_d(d,d2)
+    # Sorting based on pmi or w2vec or jaccard
+    print('Jaccard done.')
+    for edge in sort:
+        jacc = edge2jacc[edge]
+        g[edge[0]][edge[1]]['jaccard_similarity'] = jacc
     # extract_largets component
     components = list(nx.connected_components(g))
     g = nx.subgraph(g,nodes=max(components,key=len))
+
     if add_community:
         if 'community' in globals():
             g = add_community_relative_degree(g)
