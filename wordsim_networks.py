@@ -60,6 +60,7 @@ def generate_similarity_network(docs,min_cut = 10,maximum_nodes = 10000,topn_edg
     Choose min_cut and or maximum_nodes to include only tokens with a mininum count and a maximum number of nodes.
     sorting_measure: Choose which similarity measure should be used to define the network> 'pmi','w2vec','jaccard'.
     topn_edges: number of most similar edges to include.
+    Add community partitions the network using the louvain modularitybased algorithm, and adds a community relative degree attribute to the nodes 'relative_degree', very useful for visualization of words.
     """
     cut = min_cut
     topn = topn_edges
@@ -191,12 +192,22 @@ def generate_similarity_network(docs,min_cut = 10,maximum_nodes = 10000,topn_edg
         g.add_node(n2,**{'n_docs':c[n2]})
         g.add_edge(n,n2,**{'w2vec_similarity':sim,'pmi':pmi,'count':count,'jaccard_similarity':jacc})
 
+    if add_community:
+        if 'community' in globals():
+            g = add_community_relative_degree(g)
+        else:
+            print('Community module is not installed. Will not add community information.')
     # add knn
     if add_knn_info:
-
+        if sorting_mechanism=='pmi':
+            wkey = 'pmi'
+        elif sorting_mechanism=='w2vec':
+            wkey = 'w2vec_similarity'
+        elif sorting_mechanism=='jaccard':
+            wkey = 'jaccard_similarity'
         knn = nx.DiGraph()
         for n in tqdm.tqdm(list(g)):
-            for k,n2 in enumerate(sorted(g[n],key=lambda x: g[n][x]['pmi'])):
+            for k,n2 in enumerate(sorted(g[n],key=lambda x: g[n][x][wkey])):
                 d = g[n][n2].copy()
                 d['k'] = k
                 knn.add_edge(n,n2,**d)
@@ -215,9 +226,4 @@ def generate_similarity_network(docs,min_cut = 10,maximum_nodes = 10000,topn_edg
             g[n][n2]['max_k'] = max(k1,k2)
         if return_knn:
             return g,knn
-    if add_community:
-        if 'community' in globals():
-            g = add_community_relative_degree(g)
-        else:
-            print('Community module is not installed. Will not add community information.')
     return g
