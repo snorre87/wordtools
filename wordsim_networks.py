@@ -79,6 +79,7 @@ clean=lambda x:x, pmi_smoothing=10,return_knn=False
 ,add_community=True,add_w2vec_sim=True,add_knn_info=True,w2vec_docs=False
 ,remove_self_edges=False):
     """Function for creating a network out of documents. It calculates pmi, jaccard similarity, and word2vec similarity of entities/words, and creates a network out of the X most similar words.
+    Input should be a list of tokenized docs, or list of strings. Could be lists of words or e.g. named entities. Anything goes.
     Choose min_cut and or maximum_nodes to include only tokens with a mininum count and a maximum number of nodes.
     sorting_measure: Choose which similarity measure should be used to define the network> 'pmi','w2vec'.
     topn_edges: number of most similar edges to include.
@@ -86,6 +87,9 @@ clean=lambda x:x, pmi_smoothing=10,return_knn=False
     Add community partitions the network using the louvain modularitybased algorithm, and adds a community relative degree attribute to the nodes 'relative_degree', very useful for visualization of words.
     add_knn_info, set to true if you want edge attributes ranking neighbors.
     """
+    import random
+    if type(random.choice(docs))==str:
+        docs = [nltk.word_tokenize(doc) for doc in docs]
     cut = min_cut
     topn = topn_edges
     c = Counter()
