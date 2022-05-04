@@ -232,7 +232,9 @@ def prepare_docs(docs,clean=lambda x:x,stem=False,resolve_entities=True):
     return docs,c
 
 def generate_similarity_network(docs,min_cut = 10,max_frac=0.25,min_edgecount=5,maximum_nodes = 10000,stem=False,topn_edges = 100000,target_average_degree=False,edge_window=128,
-sorting_measure='pmi',pmi_min=1.2,penalty_pmi = np.sqrt,max_inspected_edges = 250000,w2vec_pretrained=False,w2vec_path=False,
+sorting_measure='pmi',pmi_min=1.2,build_from_pmi_weighted_sims=True
+,penalty_pmi = np.sqrt,max_inspected_edges = 250000
+,w2vec_pretrained=False,w2vec_path=False,
 clean=lambda x:x, pmi_smoothing=10,return_knn=False
 ,add_community=True,add_w2vec_sim=True,add_knn_info=True,w2vec_docs=False
 ,remove_self_edges=False):
