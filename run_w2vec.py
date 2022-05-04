@@ -8,6 +8,7 @@ from collections import Counter
 import random
 import nltk
 nltk.download('punkt')
+import numpy as np
 def calculate_w2vec_size(count):
   count = count/1000000
   base_size = 64

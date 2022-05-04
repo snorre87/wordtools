@@ -1,6 +1,8 @@
 import os
-version = 0.1
-author = 'Snorre Ralund, PhD'
+__copyright__ = "Copyright (C) Snorre Ralund"
+__license__ = "Work in progress, please do not share or circulate"
+__version__ = 0.2
+__author__ = 'Snorre Ralund, PhD'
 try:
     import networkx as nx
 except:
@@ -13,7 +15,8 @@ try:
 except:
     inp = input('The community module is not installed. Do you want to install? Press y. Can work without.')
     if inp =='y':
-        os.system('pip install python-louvain')
+        os.system(
+        'pip install python-louvain')
         import community
 try:
     import gensim
@@ -33,6 +36,7 @@ from collections import Counter
 import numpy as np
 import tqdm
 import os
+
     ## edge based jaccard
 def jaccard_d(d,d2):
     nom = len(d&d2)
@@ -61,7 +65,7 @@ def resolve_docs(docs,e2e,clean):
     for doc in docs:
         l = []
         for w in doc:
-            w = clean(w)
+            w = clean(w.lower())
             if len(w)==0:
                 continue
             w = resolve_ent(w,e2e)
@@ -71,10 +75,164 @@ def resolve_docs(docs,e2e,clean):
     return docs2,c
 def resolve_ent(e,e2e):
     if e in e2e:
-        return e2e[e]
+        new = e2e[e]
+        if new==e:
+            return e
+        # recursive part
+        return resolve_ent(new,e2e)
     return e
-def generate_similarity_network(docs,min_cut = 10,maximum_nodes = 10000,topn_edges = 100000,target_average_degree=False,
-sorting_measure='pmi',w2vec_pretrained=False,w2vec_path=False,
+def add_neighbor_relative_degree(g):
+    scores = []
+    for n in g:
+        ns = g[n]
+        deg = len(ns)
+        degs = [len(g[n2]) for n2 in ns]
+        std = np.std(degs)
+        m = np.mean(degs)
+        score = (deg-m)/std
+        g.nodes[n]['neighbor_relative_degree'] = score
+        scores.append(score)
+    min_ = min(scores)
+    for n in g:
+        score = g.nodes[n]['neighbor_relative_degree']
+        score +=(min_+1)
+        g.nodes[n]['neighbor_relative_degree'] = score
+    return g
+from collections import Counter
+import numpy as np
+from numpy import dot
+from numpy.linalg import norm
+def cosine(c,c2): # hurtigst
+    l = set(c)|set(c2)
+    a,a2 = np.array([c[i] for i in l]),np.array([c2[i] for i in l])
+    return dot(a, a2)/(norm(a)*norm(a2))
+def calculate_pmi_similarity(pmis,penalty_pmi = np.sqrt,max_inspected_edges = 250000):
+  d = {}
+  most = pmis.most_common(max_inspected_edges)
+  for (n,n2),pmi in most:
+    if type(penalty_pmi)!=type(bool):
+      pmi = penalty_pmi(pmi)
+    try:
+      d[n][n2] = pmi
+    except:
+      d[n] = Counter({n2:pmi})
+    try:
+      d[n2][n] = pmi
+    except:
+      d[n2] = Counter({n:pmi})
+  cos_sims = {}
+  for (n,n2),_ in tqdm.tqdm(most):
+    c,c2 = d[n],d[n2]
+    cos_sims[(n,n2)] = cosine(c,c2)
+  return cos_sims
+def build_graph_from_similarities(cos_sims,check_diff = 0.01,min_sim=0.3,induce_sparsity=False,manual_cut=False):
+  if manual_cut:
+    for edge, sim in tqdm.tqdm(Counter(cos_sims).most_common()):
+      if sim<manual_cut:
+        break
+      g.add_edge(*edge,weight=sim)
+    return g
+  g = nx.Graph()
+  best_score = 0
+  count = 0
+  last_sim = max(cos_sims.values())
+  if induce_sparsity:
+    print('Locating optimal cut point, maximizing sparsity, degree equally and logged component size...')
+  else:
+    print('Locating optimal cut point, maximizing sparsity, degree equally and logged component size, and ratio2next biggest component... ')
+  for edge, sim in tqdm.tqdm(Counter(cos_sims).most_common()):
+    g.add_edge(*edge,weight=sim)
+    if (last_sim-sim)>check_diff:
+      last_sim = sim
+      lens = sorted([len(i) for i in comps],reverse=True)
+      ratio2next = lens[0]/sum(lens[0:2])
+      big = nx.subgraph(g,max(comps,key=len))
+      deg = [len(big[i]) for i in big]
+      #ent = scipy.stats.entropy(deg)
+      dens = nx.density(big)
+      sparse = 1-dens
+      largest = len(big)
+      degs = deg
+      degs = np.array(degs)
+      unequal = degs.mean()**2/(degs*degs).mean()
+      if induce_sparsity:
+        score = np.log(largest)*sparse*unequal
+      else:
+        score = np.log(largest)*sparse*unequal*ratio2next
+      #score = (largest/len(g))*sparse*unequal#*ent
+      if score>best_score:
+        #best_g = g.copy()
+        best_score = score
+        best_sim = sim
+      scores.append(score)
+      all_scores.append((n,largest,sparse,ent,unequal))
+    count +=1
+    if sim<=min_sim:
+      break
+  stats = {'best_score':best_score,'cut':best_sim}
+  print('Cut found here:',stats)
+  g = nx.Graph()
+  for edge, sim in tqdm.tqdm(Counter(cos_sims).most_common()):
+    if sim<best_sim:
+      break
+    g.add_edge(*edge,weight=sim)
+
+  return g
+
+def prepare_docs(docs,clean=lambda x:x,stem=False,resolve_entities=True):
+    import random
+    if type(random.choice(docs))==str:
+        import nltk
+        docs = [nltk.word_tokenize(doc) for doc in docs]
+        ## missing phraser.
+    if stem:
+        print('Not implemented yet, use custom clean function instead.')
+    if resolve_entities:
+        c = Counter()
+        c2 = Counter()
+        for doc in docs:
+            for w in doc:
+                j = clean(w.lower())
+                if len(j)==0:
+                    continue
+                c[w]+=1
+                c2[j]+=1
+        # Remove duplicates from different spellings and lowercasing
+        ##missing apply optional lemmatizer or stemmer, the clean function could be a stemmer.
+        g = nx.DiGraph()
+        for e in c:
+            j = clean(e.lower())
+            #apply clean and lemma
+            if len(e)==0:
+                continue
+            if e==j:
+                continue
+            if c2[j]>c[e]:
+                g.add_edge(j,e)
+
+        e2e = {}
+        for e in c:
+            e2 = clean(e.lower())
+            if g.has_node(e2):
+                ent = sorted(g[e2].keys(),key=lambda x: c[x])[-1]
+                e2e[e]=ent
+        del c2
+        docs,c = resolve_docs(docs,e2e,clean)
+    else:
+        c = Counter()
+        new_docs = []
+        for doc in docs:
+            new_doc = []
+            for w in doc:
+                w =clean(w)
+                c[w] +=1
+                new_doc.append(w)
+            new_docs.append(new_doc)
+        docs = new_docs
+    return docs,c
+
+def generate_similarity_network(docs,min_cut = 10,max_frac=0.25,min_edgecount=5,maximum_nodes = 10000,stem=False,topn_edges = 100000,target_average_degree=False,edge_window=128,
+sorting_measure='pmi',pmi_min=1.2,penalty_pmi = np.sqrt,max_inspected_edges = 250000,w2vec_pretrained=False,w2vec_path=False,
 clean=lambda x:x, pmi_smoothing=10,return_knn=False
 ,add_community=True,add_w2vec_sim=True,add_knn_info=True,w2vec_docs=False
 ,remove_self_edges=False):
@@ -87,42 +245,54 @@ clean=lambda x:x, pmi_smoothing=10,return_knn=False
     Add community partitions the network using the louvain modularitybased algorithm, and adds a community relative degree attribute to the nodes 'relative_degree', very useful for visualization of words.
     add_knn_info, set to true if you want edge attributes ranking neighbors.
     """
-    import random
-    if type(random.choice(docs))==str:
-        docs = [nltk.word_tokenize(doc) for doc in docs]
     cut = min_cut
     topn = topn_edges
-    c = Counter()
-    c2 = Counter()
-    for doc in docs:
-        for w in doc:
-            w = clean(w)
-            if len(w)==0:
-                continue
-            c[w]+=1
-            c2[w.lower()]+=1
-    # Remove duplicates from different spellings and lowercasing
-    g = nx.Graph()
-    for e in c:
-        j = e.lower()
-        if len(e)==0:
-            continue
-        if e[0].isupper():
-            if c2[j]>c[e]:
-                g.add_edge(j,e)
-
-    e2e = {}
-    for e in c:
-        e2 = e.lower()
-        if g.has_node(e2):
-            ent = list(g[e2].keys())[0]
-            e2e[e]=ent
-    del c2
-    docs,c = resolve_docs(docs,e2e,clean)
-    keep = set([i for i,count in c.most_common(maximum_nodes) if count>=cut])
+    max_count = int(len(docs)*max_frac)
+    docs,c = prepare_docs(docs,clean=clean,stem=stem)
+    keep = set([i for i,count in c.most_common(maximum_nodes) if count>=cut and count<=max_count])
     print('%d nodes are kept using minimum cut.'%len(keep))
     if target_average_degree!=False:
         topn = int(target_average_degree*len(keep))
+    n_docs = len(docs)
+    print('Start characterizing edges')
+    edge_c = Counter()
+    for doc in docs:
+        ents = [i for i in doc if i in keep]
+        for i in range(len(ents)-1):
+            n = ents[i]
+            for j in range(i+1,min(i+edge_window,len(ents))):
+                n2 = ents[j]
+                if remove_self_edges:
+                    if n==n2:
+                        continue
+                edge_c[tuple(sorted([n,n2]))] +=1
+    pmis = {}
+    alpha = pmi_smoothing # smoothing term
+    out = []
+    for edge,count in edge_c.items():
+        n,n2 = edge
+        if count<min_edgecount:
+            out.append(edge)
+            continue
+        p = (c[n]+alpha)/n_docs
+        p2 = (c[n2]+alpha)/n_docs
+        m = count/n_docs
+        pmi = m/(p*p2)
+        if pmi<=pmi_min:
+            continue
+        pmis[edge] = pmi
+    pmis = Counter(pmis)
+    for edge in out:
+        del edge_c[edge]
+    print('PMI done.')
+    # Comuting PMI weighted cooccurrence network similarities
+    cos_sims = calculate_pmi_similarity(pmis,penalty_pmi = penalty_pmi,max_inspected_edges=max_inspected_edges)
+
+    if build_from_pmi_weighted_sims:
+        g = build_graph_from_similarities(cos_sims,check_diff = 0.01,min_sim=0.3,induce_sparsity=False,manual_cut=False)
+        return g
+    ##### Alternative similarity schemes.
+    # W2vec distance
     w2vec_isinstalled = 'gensim' in globals()
     if w2vec_isinstalled and add_w2vec_sim:
         if type(w2vec_pretrained) == type(False):
@@ -142,31 +312,7 @@ clean=lambda x:x, pmi_smoothing=10,return_knn=False
                         pickle.dump(ent2v,open(w2vec_path,'wb'))
         else:
             ent2v = w2vec_pretrained
-    n_docs = len(docs)
-    print('Start characterizing edges')
-    edges = []
-    for doc in docs:
-        ents = [i for i in doc if i in keep]
-        for i in range(len(ents)-1):
-            n = ents[i]
-            for j in range(i+1,len(ents)):
-                n2 = ents[j]
-                if remove_self_edges:
-                    if n==n2:
-                        continue
-                edges.append(tuple(sorted([n,n2])))
-    edge_c = Counter(edges)
-    pmis = {}
-    alpha = pmi_smoothing # smoothing term
-    for edge,count in edge_c.items():
-        n,n2 = edge
-        p = (c[n]+alpha)/n_docs
-        p2 = (c[n2]+alpha)/n_docs
-        m = count/n_docs
-        pmis[edge] = m/(p*p2)
-    pmis = Counter(pmis)
-    print('PMI done.')
-    # W2vec distance
+
     if w2vec_isinstalled:
         edge2sim = {}
         error= 0
@@ -252,17 +398,31 @@ clean=lambda x:x, pmi_smoothing=10,return_knn=False
         if return_knn:
             return g,knn
     return g
-def draw_network_quick(g,label_p=0.75,adjust_text=False):
+def draw_network_quick(g,label_p=0.75,adjust_text=False,node_or_community_norm='neighbor'):
     '''Function for quick visualization of networkself.
-    Choose the fraction of labels to be displayed, will be ordered by relative community degree.
-    Use the adjust_text to avoid label overlap.'''
+    Choose the fraction of labels to be displayed, will be ordered by relative community degree or relative neighbor degree.
+    Use the adjust_text to avoid label overlap.
+    node_or_community_norm: choose between 'neighbor' or 'community' or 'degree' '''
     import matplotlib.pyplot as plt
-    try:
-        sort = sorted(g,key=lambda x: g.nodes[x]['relative_degree'],reverse=True)
-    except:
-        print('will add community info')
-        g = add_community_relative_degree(g)
-        sort = sorted(g,key=lambda x: g.nodes[x]['relative_degree'],reverse=True)
+    if node_or_community_norm=='neighbor':
+        key = 'neighbor_relative_degree'
+        try:
+            sort = sorted(g,key=lambda x: g.nodes[x][key],reverse=True)
+        except:
+            print('will add neighbor relative degre')
+            g = add_neighbor_relative_degree(g)
+            sort = sorted(g,key=lambda x: g.nodes[x][key],reverse=True)
+    elif node_or_community_norm=='community':
+        key = 'relative_degree'
+        try:
+            sort = sorted(g,key=lambda x: g.nodes[x][key],reverse=True)
+        except:
+            print('will add community info')
+            g = add_community_relative_degree(g)
+            sort = sorted(g,key=lambda x: g.nodes[x][key],reverse=True)
+    else:
+        print('Will order by degree')
+        sort = sorted(g,key=lambda x: len(g[x]),reverse=True)
     top = sort[:int(len(g)*label_p)]
     community = [int(g.nodes[i]['community']) for i in g]
     colors = [plt.cm.tab20(i/max(community)) for i in community]
