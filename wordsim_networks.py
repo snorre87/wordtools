@@ -58,11 +58,9 @@ def run_infomap(g):
     for n,n1 in g.edges():
         g_num.add_edge(n2num[n],n2num[n1])
 
-    im = Infomap("--undirected\")
-    for n,n1 in g_num.edges():\n",
+    im = Infomap("--undirected")
+    for n,n1 in g_num.edges():
         im.addLink(n,n1)
-
-
     im.run()
 
     part = {num2u[i]:m for i,m in im.getModules().items()}
