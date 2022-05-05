@@ -291,7 +291,7 @@ def calculate_pmi_scores(docs,c=False,min_cut=10,max_frac=0.25,min_edgecount=5,m
         del edge_c[edge]
     print('PMI done.')
     return pmis,edge_c,keep
-def generate_similarity_network(docs,min_cut = 10,max_frac=0.25,min_edgecount=5,maximum_nodes = 10000,stem=False,topn_edges = 100000,target_average_degree=False,edge_window=128,
+def generate_similarity_network(docs,min_cut = 10,max_frac=0.25,min_edgecount=5,maximum_nodes = 10000,stem=False,topn_edges = 100000,target_average_degree=False,edge_window=128,large_component_size=False,
 sorting_measure='pmi',pmi_min=1.2,build_from_pmi_weighted_sims=True,induce_sparsity=False
 ,penalty_pmi = np.sqrt,max_inspected_edges = 250000
 ,w2vec_pretrained=False,w2vec_path=False,
@@ -323,7 +323,7 @@ clean=lambda x:x, pmi_smoothing=10,return_knn=False
     cos_sims = calculate_pmi_similarity(pmis,penalty_pmi = penalty_pmi,max_inspected_edges=max_inspected_edges)
 
     if build_from_pmi_weighted_sims:
-        g = build_graph_from_similarities(cos_sims,check_diff = 0.01,min_sim=0.3,induce_sparsity=induce_sparsity,manual_cut=False)
+        g = build_graph_from_similarities(cos_sims,check_diff = 0.01,min_sim=0.3,induce_sparsity=induce_sparsity,manual_cut=False,large_component_size=large_component_size)
         return g
     ##### Alternative similarity schemes.
     # W2vec distance
