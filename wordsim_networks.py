@@ -20,6 +20,13 @@ except:
         'pip install python-louvain')
         import community
 try:
+    import infomap
+except:
+    inp = input('The infomap community module is not installed. Do you want to install? Press y. Can work without.')
+    if inp =='y':
+        os.system(
+        'pip install infomap')
+try:
     import gensim
 except:
     inp = input('The gensim module is not installed. Do you want to install? Press y. Can work without.')
@@ -43,8 +50,30 @@ def jaccard_d(d,d2):
     nom = len(d&d2)
     return nom/len(d|d2)
 from community import community_louvain
-def add_community_relative_degree(g):
-    part = community_louvain.best_partition(g)
+def run_infomap(g):
+    from infomap import Infomap
+    n2num = {u:num for num,u in enumerate(g)}
+    num2u = sorted(n2num,key=lambda x: n2num[x])
+    g_num = nx.Graph()
+    for n,n1 in g.edges():
+        g_num.add_edge(n2num[n],n2num[n1])
+
+    im = Infomap("--undirected\")
+    for n,n1 in g_num.edges():\n",
+        im.addLink(n,n1)
+
+
+    im.run()
+
+    part = {num2u[i]:m for i,m in im.getModules().items()}
+    return part
+
+def add_community_relative_degree(g,method='infomap'):
+    "Partition network using either 'infomap' or 'louvain' and compute community relative degree. Degree/max_degree of community"
+    if method=='louvain':
+        part = community_louvain.best_partition(g)
+    else:
+        part = run_infomap(g)
     # calculate community degree to weigh labels
     com2n = {p:[] for p in part.values()}
     for n,p in part.items():
