@@ -26,6 +26,7 @@ except:
     if inp =='y':
         os.system(
         'pip install infomap')
+        import infomap
 try:
     import gensim
 except:
@@ -66,8 +67,9 @@ def run_infomap(g):
     part = {num2u[i]:m for i,m in im.getModules().items()}
     return part
 
-def add_community_relative_degree(g,method='infomap'):
-    "Partition network using either 'infomap' or 'louvain' and compute community relative degree. Degree/max_degree of community"
+def add_community_relative_degree(g,method='louvain'):
+    """Partition network using either 'infomap' or 'louvain' and compute community relative degree. Degree/max_degree of community
+    Infomap is unstable, and might crash the run time."""
     if method=='louvain':
         part = community_louvain.best_partition(g)
     else:
