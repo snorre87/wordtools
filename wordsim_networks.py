@@ -3,6 +3,7 @@ __copyright__ = "Copyright (C) Snorre Ralund"
 __license__ = "Work in progress, please do not share or circulate"
 __version__ = 0.2
 __author__ = 'Snorre Ralund, PhD'
+import pandas as pd
 try:
     import networkx as nx
 except:
@@ -59,28 +60,6 @@ def add_community_relative_degree(g):
             g.nodes[n]['relative_degree'] = rel_d
     return g
 
-def resolve_docs(docs,e2e,clean):
-    docs2 = []
-    c = Counter()
-    for doc in docs:
-        l = []
-        for w in doc:
-            w = clean(w.lower())
-            if len(w)==0:
-                continue
-            w = resolve_ent(w,e2e)
-            l.append(w)
-            c[w]+=1
-        docs2.append(l)
-    return docs2,c
-def resolve_ent(e,e2e):
-    if e in e2e:
-        new = e2e[e]
-        if new==e:
-            return e
-        # recursive part
-        return resolve_ent(new,e2e)
-    return e
 def add_neighbor_relative_degree(g):
     scores = []
     for n in g:
@@ -125,7 +104,7 @@ def calculate_pmi_similarity(pmis,penalty_pmi = np.sqrt,max_inspected_edges = 25
     c,c2 = d[n],d[n2]
     cos_sims[(n,n2)] = cosine(c,c2)
   return cos_sims
-def build_graph_from_similarities(cos_sims,check_diff = 0.01,min_sim=0.3,induce_sparsity=False,manual_cut=False):
+def build_graph_from_similarities(cos_sims,check_diff = 0.01,min_sim=0.3,induce_sparsity=False,manual_cut=False,log=False,large_component_size=False):
   if manual_cut:
     for edge, sim in tqdm.tqdm(Counter(cos_sims).most_common()):
       if sim<manual_cut:
@@ -136,6 +115,8 @@ def build_graph_from_similarities(cos_sims,check_diff = 0.01,min_sim=0.3,induce_
   best_score = 0
   count = 0
   last_sim = max(cos_sims.values())
+  if log:
+      scores = []
   if induce_sparsity:
     print('Locating optimal cut point, maximizing sparsity, degree equally and logged component size...')
   else:
@@ -144,6 +125,7 @@ def build_graph_from_similarities(cos_sims,check_diff = 0.01,min_sim=0.3,induce_
     g.add_edge(*edge,weight=sim)
     if (last_sim-sim)>check_diff:
       last_sim = sim
+      comps = list(nx.connected_components(g))
       lens = sorted([len(i) for i in comps],reverse=True)
       ratio2next = lens[0]/sum(lens[0:2])
       big = nx.subgraph(g,max(comps,key=len))
@@ -155,17 +137,25 @@ def build_graph_from_similarities(cos_sims,check_diff = 0.01,min_sim=0.3,induce_
       degs = deg
       degs = np.array(degs)
       unequal = degs.mean()**2/(degs*degs).mean()
+      if log:
+          d = {'equality':unequal,'largest':largest,'sparsity':sparse,'ratio2next':ratio2next,
+          'sim':sim,'n_edges':len(g.edges()),'n':len(g)}
+          scores.append(d)
       if induce_sparsity:
         score = np.log(largest)*sparse*unequal
       else:
         score = np.log(largest)*sparse*unequal*ratio2next
       #score = (largest/len(g))*sparse*unequal#*ent
+      if large_component_size:
+          if largest>large_component_size:
+            best_score = score
+            best_sim = sim
+            break
       if score>best_score:
         #best_g = g.copy()
         best_score = score
         best_sim = sim
-      scores.append(score)
-      all_scores.append((n,largest,sparse,ent,unequal))
+
     count +=1
     if sim<=min_sim:
       break
@@ -177,17 +167,44 @@ def build_graph_from_similarities(cos_sims,check_diff = 0.01,min_sim=0.3,induce_
       break
     g.add_edge(*edge,weight=sim)
 
+  if log:
+    return g,pd.DataFrame(scores)
   return g
+
+def resolve_docs(docs,e2e,clean):
+    docs2 = []
+    c = Counter()
+    for doc in docs:
+        l = []
+        for w in doc:
+            w = clean(w.lower())
+            if len(w)==0:
+                continue
+            w = resolve_ent(w,e2e)
+            l.append(w)
+            c[w]+=1
+        docs2.append(l)
+    return docs2,c
+def resolve_ent(e,e2e):
+    if e in e2e:
+        new = e2e[e]
+        if new==e:
+            return e
+        # recursive part
+        return resolve_ent(new,e2e)
+    return e
 
 def prepare_docs(docs,clean=lambda x:x,stem=False,resolve_entities=True):
     import random
     if type(random.choice(docs))==str:
+        print('Will tokenize data...')
         import nltk
         docs = [nltk.word_tokenize(doc) for doc in docs]
         ## missing phraser.
     if stem:
         print('Not implemented yet, use custom clean function instead.')
     if resolve_entities:
+        print('Resolving entities to most common shared representation (after cleaning and lowercasing)')
         c = Counter()
         c2 = Counter()
         for doc in docs:
@@ -214,7 +231,7 @@ def prepare_docs(docs,clean=lambda x:x,stem=False,resolve_entities=True):
         for e in c:
             e2 = clean(e.lower())
             if g.has_node(e2):
-                ent = sorted(g[e2].keys(),key=lambda x: c[x])[-1]
+                ent = sorted(g[e2],key=lambda x: c[x])[-1]
                 e2e[e]=ent
         del c2
         docs,c = resolve_docs(docs,e2e,clean)
@@ -230,31 +247,17 @@ def prepare_docs(docs,clean=lambda x:x,stem=False,resolve_entities=True):
             new_docs.append(new_doc)
         docs = new_docs
     return docs,c
-
-def generate_similarity_network(docs,min_cut = 10,max_frac=0.25,min_edgecount=5,maximum_nodes = 10000,stem=False,topn_edges = 100000,target_average_degree=False,edge_window=128,
-sorting_measure='pmi',pmi_min=1.2,build_from_pmi_weighted_sims=True
-,penalty_pmi = np.sqrt,max_inspected_edges = 250000
-,w2vec_pretrained=False,w2vec_path=False,
-clean=lambda x:x, pmi_smoothing=10,return_knn=False
-,add_community=True,add_w2vec_sim=True,add_knn_info=True,w2vec_docs=False
-,remove_self_edges=False):
-    """Function for creating a network out of documents. It calculates pmi, jaccard similarity, and word2vec similarity of entities/words, and creates a network out of the X most similar words.
-    Input should be a list of tokenized docs, or list of strings. Could be lists of words or e.g. named entities. Anything goes.
-    Choose min_cut and or maximum_nodes to include only tokens with a mininum count and a maximum number of nodes.
-    sorting_measure: Choose which similarity measure should be used to define the network> 'pmi','w2vec'.
-    topn_edges: number of most similar edges to include.
-    Or use target_average_degree to choose edges by multiplying the number of nodes with an average degree.
-    Add community partitions the network using the louvain modularitybased algorithm, and adds a community relative degree attribute to the nodes 'relative_degree', very useful for visualization of words.
-    add_knn_info, set to true if you want edge attributes ranking neighbors.
-    """
+def calculate_pmi_scores(docs,c=False,min_cut=10,max_frac=0.25,min_edgecount=5,maximum_nodes=10000,pmi_min=1.2,remove_self_edges=True,edge_window=64,pmi_smoothing=10):
     cut = min_cut
-    topn = topn_edges
     max_count = int(len(docs)*max_frac)
-    docs,c = prepare_docs(docs,clean=clean,stem=stem)
+    if not c:
+        c = Counter()
+        for doc in docs:
+            for w in doc:
+                c[w]+=1
+
     keep = set([i for i,count in c.most_common(maximum_nodes) if count>=cut and count<=max_count])
     print('%d nodes are kept using minimum cut.'%len(keep))
-    if target_average_degree!=False:
-        topn = int(target_average_degree*len(keep))
     n_docs = len(docs)
     print('Start characterizing edges')
     edge_c = Counter()
@@ -287,11 +290,40 @@ clean=lambda x:x, pmi_smoothing=10,return_knn=False
     for edge in out:
         del edge_c[edge]
     print('PMI done.')
+    return pmis,edge_c,keep
+def generate_similarity_network(docs,min_cut = 10,max_frac=0.25,min_edgecount=5,maximum_nodes = 10000,stem=False,topn_edges = 100000,target_average_degree=False,edge_window=128,
+sorting_measure='pmi',pmi_min=1.2,build_from_pmi_weighted_sims=True,induce_sparsity=False
+,penalty_pmi = np.sqrt,max_inspected_edges = 250000
+,w2vec_pretrained=False,w2vec_path=False,
+clean=lambda x:x, pmi_smoothing=10,return_knn=False
+,add_community=True,add_w2vec_sim=True,add_knn_info=True,w2vec_docs=False
+,remove_self_edges=False):
+    """Function for creating a network out of documents. It calculates pmi, jaccard similarity, and word2vec similarity of entities/words, and creates a network out of the X most similar words.
+    Input should be a list of tokenized docs, or list of strings. Could be lists of words or e.g. named entities. Anything goes.
+    Choose min_cut and or maximum_nodes to include only tokens with a mininum count and a maximum number of nodes.
+    induce_sparsity is set to false: Defines a different objective for making the optimal cut in the dendrogram of the similarity graph. If this is set to True, it will only optimize sparsity and eqaully and not size of the resulting graph. Resulting in a smaller but more clustered and sparse graph.
+
+    old...
+    sorting_measure: Choose which similarity measure should be used to define the network> 'pmi','w2vec'.
+    topn_edges: number of most similar edges to include.
+    Or use target_average_degree to choose edges by multiplying the number of nodes with an average degree.
+    Add community partitions the network using the louvain modularitybased algorithm, and adds a community relative degree attribute to the nodes 'relative_degree', very useful for visualization of words.
+    add_knn_info, set to true if you want edge attributes ranking neighbors.
+    """
+    cut = min_cut
+    topn = topn_edges
+    max_count = int(len(docs)*max_frac)
+    docs,c = prepare_docs(docs,clean=clean,stem=stem)
+    pmis,edge_c,keep = calculate_pmi_scores(docs,c=c,min_cut=min_cut,max_frac=max_frac,min_edgecount=min_edgecount,maximum_nodes=maximum_nodes
+    ,pmi_min=pmi_min,remove_self_edges=remove_self_edges
+    ,edge_window=edge_window,pmi_smoothing=pmi_smoothing)
+    if target_average_degree!=False:
+        topn = int(target_average_degree*len(keep))
     # Comuting PMI weighted cooccurrence network similarities
     cos_sims = calculate_pmi_similarity(pmis,penalty_pmi = penalty_pmi,max_inspected_edges=max_inspected_edges)
 
     if build_from_pmi_weighted_sims:
-        g = build_graph_from_similarities(cos_sims,check_diff = 0.01,min_sim=0.3,induce_sparsity=False,manual_cut=False)
+        g = build_graph_from_similarities(cos_sims,check_diff = 0.01,min_sim=0.3,induce_sparsity=induce_sparsity,manual_cut=False)
         return g
     ##### Alternative similarity schemes.
     # W2vec distance
@@ -400,6 +432,12 @@ clean=lambda x:x, pmi_smoothing=10,return_knn=False
         if return_knn:
             return g,knn
     return g
+def extract_largest_component(g):
+    comps = list(nx.connected_components(g))
+    largest = max(comps,key=len)
+    big = nx.subgraph(g,largest)
+    return big
+
 def draw_network_quick(g,label_p=0.75,adjust_text=False,node_or_community_norm='neighbor'):
     '''Function for quick visualization of networkself.
     Choose the fraction of labels to be displayed, will be ordered by relative community degree or relative neighbor degree.
