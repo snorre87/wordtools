@@ -51,7 +51,7 @@ def jaccard_d(d,d2):
     nom = len(d&d2)
     return nom/len(d|d2)
 from community import community_louvain
-def run_infomap(g):
+def run_infomap_alt(g):
     from infomap import Infomap
     n2num = {u:num for num,u in enumerate(g)}
     num2u = sorted(n2num,key=lambda x: n2num[x])
@@ -66,7 +66,25 @@ def run_infomap(g):
 
     part = {num2u[i]:m for i,m in im.getModules().items()}
     return part
+def run_infomap(G):
+    """
+    Partition network with the Infomap algorithm.
+    Annotates nodes with 'community' id.
+    """
+    import infomap
+    im = infomap.Infomap("--two-level")
 
+    print("Building Infomap network from a NetworkX graph...")
+
+    im.add_networkx_graph(G)
+
+    print("Find communities with Infomap...")
+    im.run()
+
+    print(f"Found {im.num_top_modules} modules with codelength: {im.codelength}")
+
+    communities = im.get_modules()
+    nx.set_node_attributes(G, communities, 'community')
 def add_community_relative_degree(g,method='louvain'):
     """Partition network using either 'infomap' or 'louvain' and compute community relative degree. Degree/max_degree of community
     Infomap is unstable, and might crash the run time."""
@@ -100,11 +118,11 @@ def add_neighbor_relative_degree(g):
         score = (deg-m)/std
         g.nodes[n]['neighbor_relative_degree'] = score
         scores.append(score)
-    min_ = min(scores)
-    for n in g:
-        score = g.nodes[n]['neighbor_relative_degree']
-        score +=(min_+1)
-        g.nodes[n]['neighbor_relative_degree'] = score
+    #min_ = min(scores)
+    #for n in g:
+    #    score = g.nodes[n]['neighbor_relative_degree']
+    #    score +=(min_+1)
+    #    g.nodes[n]['neighbor_relative_degree'] = score
     return g
 from collections import Counter
 import numpy as np
@@ -276,7 +294,7 @@ def prepare_docs(docs,clean=lambda x:x,stem=False,resolve_entities=True):
             new_docs.append(new_doc)
         docs = new_docs
     return docs,c
-def calculate_pmi_scores(docs,c=False,min_cut=10,max_frac=0.25,min_edgecount=5,maximum_nodes=10000,pmi_min=1.2,remove_self_edges=True,edge_window=64,pmi_smoothing=10):
+def calculate_pmi_scores(docs,custom_filter=lambda x: not x,c=False,min_cut=10,max_frac=0.25,min_edgecount=5,maximum_nodes=10000,pmi_min=1.2,remove_self_edges=True,edge_window=64,pmi_smoothing=10):
     cut = min_cut
     max_count = int(len(docs)*max_frac)
     if not c:
@@ -285,7 +303,7 @@ def calculate_pmi_scores(docs,c=False,min_cut=10,max_frac=0.25,min_edgecount=5,m
             for w in doc:
                 c[w]+=1
 
-    keep = set([i for i,count in c.most_common(maximum_nodes) if count>=cut and count<=max_count])
+    keep = set([i for i,count in c.most_common(maximum_nodes) if count>=cut and count<=max_count and not custom_filter(i)])
     print('%d nodes are kept using minimum cut.'%len(keep))
     n_docs = len(docs)
     print('Start characterizing edges')
@@ -321,6 +339,7 @@ def calculate_pmi_scores(docs,c=False,min_cut=10,max_frac=0.25,min_edgecount=5,m
     print('PMI done.')
     return pmis,edge_c,keep
 def generate_similarity_network(docs,min_cut = 10,max_frac=0.25,min_edgecount=5,maximum_nodes = 10000,stem=False,topn_edges = 100000,target_average_degree=False,edge_window=128,large_component_size=False,
+custom_filter=lambda x: not x,
 sorting_measure='pmi',pmi_min=1.2,build_from_pmi_weighted_sims=True,induce_sparsity=False
 ,penalty_pmi = np.sqrt,max_inspected_edges = 250000
 ,w2vec_pretrained=False,w2vec_path=False,
@@ -331,7 +350,7 @@ clean=lambda x:x, pmi_smoothing=10,return_knn=False
     Input should be a list of tokenized docs, or list of strings. Could be lists of words or e.g. named entities. Anything goes.
     Choose min_cut and or maximum_nodes to include only tokens with a mininum count and a maximum number of nodes.
     induce_sparsity is set to false: Defines a different objective for making the optimal cut in the dendrogram of the similarity graph. If this is set to True, it will only optimize sparsity and eqaully and not size of the resulting graph. Resulting in a smaller but more clustered and sparse graph.
-
+    custom_filter should be a function being true if you want to remove an entity. e.g. lambda x: x.isdigit() . will remove numbers
     old...
     sorting_measure: Choose which similarity measure should be used to define the network> 'pmi','w2vec'.
     topn_edges: number of most similar edges to include.
@@ -343,7 +362,7 @@ clean=lambda x:x, pmi_smoothing=10,return_knn=False
     topn = topn_edges
     max_count = int(len(docs)*max_frac)
     docs,c = prepare_docs(docs,clean=clean,stem=stem)
-    pmis,edge_c,keep = calculate_pmi_scores(docs,c=c,min_cut=min_cut,max_frac=max_frac,min_edgecount=min_edgecount,maximum_nodes=maximum_nodes
+    pmis,edge_c,keep = calculate_pmi_scores(docs,,custom_filter=custom_filter,c=c,min_cut=min_cut,max_frac=max_frac,min_edgecount=min_edgecount,maximum_nodes=maximum_nodes
     ,pmi_min=pmi_min,remove_self_edges=remove_self_edges
     ,edge_window=edge_window,pmi_smoothing=pmi_smoothing)
     if target_average_degree!=False:
