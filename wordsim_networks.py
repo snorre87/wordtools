@@ -362,7 +362,7 @@ clean=lambda x:x, pmi_smoothing=10,return_knn=False
     topn = topn_edges
     max_count = int(len(docs)*max_frac)
     docs,c = prepare_docs(docs,clean=clean,stem=stem)
-    pmis,edge_c,keep = calculate_pmi_scores(docs,,custom_filter=custom_filter,c=c,min_cut=min_cut,max_frac=max_frac,min_edgecount=min_edgecount,maximum_nodes=maximum_nodes
+    pmis,edge_c,keep = calculate_pmi_scores(docs,custom_filter=custom_filter,c=c,min_cut=min_cut,max_frac=max_frac,min_edgecount=min_edgecount,maximum_nodes=maximum_nodes
     ,pmi_min=pmi_min,remove_self_edges=remove_self_edges
     ,edge_window=edge_window,pmi_smoothing=pmi_smoothing)
     if target_average_degree!=False:
