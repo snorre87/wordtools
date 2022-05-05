@@ -464,7 +464,12 @@ def draw_network_quick(g,label_p=0.75,adjust_text=False,node_or_community_norm='
         print('Will order by degree')
         sort = sorted(g,key=lambda x: len(g[x]),reverse=True)
     top = sort[:int(len(g)*label_p)]
-    community = [int(g.nodes[i]['community']) for i in g]
+
+    try:
+        community = [int(g.nodes[i]['community']) for i in g]
+    except:
+        g = add_community_relative_degree(g)
+        community = [int(g.nodes[i]['community']) for i in g]
     colors = [plt.cm.tab20(i/max(community)) for i in community]
     pos = nx.spring_layout(g)
     fig = plt.figure(figsize=(30,20))
