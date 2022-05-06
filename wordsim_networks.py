@@ -253,7 +253,7 @@ def resolve_docs(docs,e2e,clean):
 def resolve_ent(e,e2e):
     if e in e2e:
         new = e2e[e]
-        #return new # skip recursion for now.
+        return new # skip recursion for now.
         if new==e:
             return e
         # recursive part
