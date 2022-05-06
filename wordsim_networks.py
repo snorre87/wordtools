@@ -281,6 +281,8 @@ def prepare_docs(docs,clean=lambda x:x,stem=False,resolve_entities=True,return_e
         e2e = {}
         for e in c:
             e2 = clean(e.lower())
+            if e2==e:
+                continue
             if g.has_node(e2):
                 ent = sorted(g[e2],key=lambda x: c[x])[-1]
                 e2e[e]=ent
