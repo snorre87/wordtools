@@ -493,6 +493,9 @@ clean=lambda x:x, pmi_smoothing=10,return_knn=False
         if return_knn:
             return g,knn
     return g
+def get_components(g):
+    comps = list(nx.connected_components(g))
+    return comps
 def extract_largest_component(g):
     comps = list(nx.connected_components(g))
     largest = max(comps,key=len)
