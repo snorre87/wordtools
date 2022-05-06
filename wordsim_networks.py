@@ -128,11 +128,14 @@ from collections import Counter
 import numpy as np
 from numpy import dot
 from numpy.linalg import norm
-def cosine(c,c2): # hurtigst
+def cosine_modified(c,c2,n=False,n2=False,remove_self_edges=True): # hurtigst
+    "Calculates cosine with the added functionality of removing self in the cooccurence graph."
     l = set(c)|set(c2)
+    if remove_self_edges:
+        l = l-set([n,n2])
     a,a2 = np.array([c[i] for i in l]),np.array([c2[i] for i in l])
     return dot(a, a2)/(norm(a)*norm(a2))
-def calculate_pmi_similarity(pmis,penalty_pmi = np.sqrt,max_inspected_edges = 250000):
+def calculate_pmi_similarity(pmis,penalty_pmi = np.sqrt,max_inspected_edges = 250000,remove_self_edges=True):
   d = {}
   most = pmis.most_common(max_inspected_edges)
   for (n,n2),pmi in most:
@@ -149,7 +152,7 @@ def calculate_pmi_similarity(pmis,penalty_pmi = np.sqrt,max_inspected_edges = 25
   cos_sims = {}
   for (n,n2),_ in tqdm.tqdm(most):
     c,c2 = d[n],d[n2]
-    cos_sims[(n,n2)] = cosine(c,c2)
+    cos_sims[(n,n2)] = cosine_modified(c,c2,n=n,n2=n2,remove_self_edges=remove_self_edges)
   return cos_sims
 def build_graph_from_similarities(cos_sims,check_diff = 0.01,min_sim=0.3,induce_sparsity=False,manual_cut=False,log=False,large_component_size=False):
   if manual_cut:
@@ -368,7 +371,7 @@ clean=lambda x:x, pmi_smoothing=10,return_knn=False
     if target_average_degree!=False:
         topn = int(target_average_degree*len(keep))
     # Comuting PMI weighted cooccurrence network similarities
-    cos_sims = calculate_pmi_similarity(pmis,penalty_pmi = penalty_pmi,max_inspected_edges=max_inspected_edges)
+    cos_sims = calculate_pmi_similarity(pmis,penalty_pmi = penalty_pmi,max_inspected_edges=max_inspected_edges,remove_self_edges=remove_self_edges)
 
     if build_from_pmi_weighted_sims:
         g = build_graph_from_similarities(cos_sims,check_diff = 0.01,min_sim=0.3,induce_sparsity=induce_sparsity,manual_cut=False,large_component_size=large_component_size)
