@@ -154,7 +154,7 @@ def calculate_pmi_similarity(pmis,penalty_pmi = np.sqrt,max_inspected_edges = 25
   for (n,n2),_ in tqdm.tqdm(most):
     c,c2 = d[n],d[n2]
     sim = cosine_modified(c,c2,n=n,n2=n2,remove_self_edges=remove_self_edges)
-    if np.isnan(sim):
+    if np.isnan(sim): # fix problem if selfedgs are not included.s
         sim = 0
     cos_sims[(n,n2)] = sim
   return cos_sims
@@ -179,6 +179,8 @@ def build_graph_from_similarities(cos_sims,check_diff = 0.01,min_sim=False,induc
   else:
     print('Locating optimal cut point, maximizing sparsity, degree equally and logged component size, and ratio2next biggest component... ')
   for edge, sim in tqdm.tqdm(Counter(cos_sims).most_common()):
+    if edge[0]==edge[1]: # Not until now we remove self edges no matter what.
+      continue
     g.add_edge(*edge,weight=sim)
     if (last_sim-sim)>check_diff:
       last_sim = sim
