@@ -248,7 +248,15 @@ def resolve_ent(e,e2e):
         return resolve_ent(new,e2e)
     return e
 
-def prepare_docs(docs,clean=lambda x:x,stem=False,resolve_entities=True,return_e2e=False):
+def replace_phrases(text,phrases):
+    for i in phrases:
+        text = text.replace(i,'_'.join(i.split()))
+    return text
+
+def prepare_docs(docs,clean=lambda x:x,stem=False,resolve_entities=True,return_e2e=False,phrases=False):
+    """Function for preparing documents.
+    Tokenization, Cleaning, Mapping between original and cleaned version to merge entities, and Phrasing using collocation detector.
+    Phrases set to True if you want to locate bigrams before creating the cooccurence network."""
     import random
     if type(random.choice(docs))==str:
         print('Will tokenize data...')
@@ -304,6 +312,17 @@ def prepare_docs(docs,clean=lambda x:x,stem=False,resolve_entities=True,return_e
                 new_doc.append(w)
             new_docs.append(new_doc)
         docs = new_docs
+
+    if phrases:
+        print('Locating collocations...')
+        from gensim.models.phrases import Phrases
+        phrase_model_bi = Phrases(docs)
+        phrase_docs_bi = [phrase_model_bi[sent] for sent in docs]
+        docs = phrase_docs_bi
+        c = Counter()
+        for doc in docs:
+            for w in doc:
+                c[w]+=1
     if return_e2e:
         return docs,c,e2e
     return docs,c
@@ -351,7 +370,7 @@ def calculate_pmi_scores(docs,custom_filter=lambda x: not x,c=False,min_cut=10,m
         del edge_c[edge]
     print('PMI done.')
     return pmis,edge_c,keep
-def generate_similarity_network(docs,min_cut = 10,max_frac=0.25,min_edgecount=5,maximum_nodes = 10000,stem=False,topn_edges = 100000,target_average_degree=False,edge_window=128,large_component_size=False,
+def generate_similarity_network(docs,min_cut = 10,max_frac=0.25,phrases=False,min_edgecount=5,maximum_nodes = 10000,stem=False,topn_edges = 100000,target_average_degree=False,edge_window=128,large_component_size=False,
 custom_filter=lambda x: not x,
 sorting_measure='pmi',pmi_min=1.2,build_from_pmi_weighted_sims=True,induce_sparsity=False
 ,penalty_pmi = np.sqrt,max_inspected_edges = 250000
@@ -362,6 +381,7 @@ clean=lambda x:x, pmi_smoothing=10,return_knn=False
     """Function for creating a network out of documents. It calculates pmi, jaccard similarity, and word2vec similarity of entities/words, and creates a network out of the X most similar words.
     Input should be a list of tokenized docs, or list of strings. Could be lists of words or e.g. named entities. Anything goes.
     Choose min_cut and or maximum_nodes to include only tokens with a mininum count and a maximum number of nodes.
+    phrases set to True if you want to locate bigrams before creating the cooccurence network.
     induce_sparsity is set to false: Defines a different objective for making the optimal cut in the dendrogram of the similarity graph. If this is set to True, it will only optimize sparsity and eqaully and not size of the resulting graph. Resulting in a smaller but more clustered and sparse graph.
     custom_filter should be a function being true if you want to remove an entity. e.g. lambda x: x.isdigit() . will remove numbers
     old...
@@ -374,7 +394,7 @@ clean=lambda x:x, pmi_smoothing=10,return_knn=False
     cut = min_cut
     topn = topn_edges
     max_count = int(len(docs)*max_frac)
-    docs,c = prepare_docs(docs,clean=clean,stem=stem)
+    docs,c = prepare_docs(docs,clean=clean,stem=stem,phrases=phrases)
     pmis,edge_c,keep = calculate_pmi_scores(docs,custom_filter=custom_filter,c=c,min_cut=min_cut,max_frac=max_frac,min_edgecount=min_edgecount,maximum_nodes=maximum_nodes
     ,pmi_min=pmi_min,remove_self_edges=remove_self_edges
     ,edge_window=edge_window,pmi_smoothing=pmi_smoothing)
