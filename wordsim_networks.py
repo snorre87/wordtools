@@ -243,9 +243,9 @@ def resolve_docs(docs,e2e,clean):
         l = []
         for w in doc:
             w2 = clean(w.lower())
-            if len(w)==0:
+            if len(2)==0:
                 continue
-            if w2 in e2e:
+            if w in e2e:
                 w = resolve_ent(w,e2e)
             l.append(w)
             c[w]+=1
@@ -254,7 +254,7 @@ def resolve_docs(docs,e2e,clean):
 def resolve_ent(e,e2e):
     if e in e2e:
         new = e2e[e]
-        return new # skip recursion for now.
+        #return new # skip recursion for now.
         if new==e:
             return e
         # recursive part
