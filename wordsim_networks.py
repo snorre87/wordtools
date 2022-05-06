@@ -22,11 +22,12 @@ except:
 try:
     import infomap
 except:
-    inp = input('The infomap community module is not installed. Do you want to install? Press y. Can work without.')
-    if inp =='y':
-        os.system(
-        'pip install infomap')
-        import infomap
+    pass
+    #inp = input('The infomap community module is not installed. Do you want to install? Press y. Can work without.')
+    #if inp =='y':
+    #    os.system(
+    #    'pip install infomap')
+    #    import infomap
 try:
     import gensim
 except:
@@ -244,7 +245,7 @@ def resolve_ent(e,e2e):
         return resolve_ent(new,e2e)
     return e
 
-def prepare_docs(docs,clean=lambda x:x,stem=False,resolve_entities=True):
+def prepare_docs(docs,clean=lambda x:x,stem=False,resolve_entities=True,return_e2e=False):
     import random
     if type(random.choice(docs))==str:
         print('Will tokenize data...')
@@ -296,6 +297,8 @@ def prepare_docs(docs,clean=lambda x:x,stem=False,resolve_entities=True):
                 new_doc.append(w)
             new_docs.append(new_doc)
         docs = new_docs
+    if return_e2e:
+        return docs,c,e2e
     return docs,c
 def calculate_pmi_scores(docs,custom_filter=lambda x: not x,c=False,min_cut=10,max_frac=0.25,min_edgecount=5,maximum_nodes=10000,pmi_min=1.2,remove_self_edges=True,edge_window=64,pmi_smoothing=10):
     cut = min_cut
@@ -489,11 +492,12 @@ def extract_largest_component(g):
     big = nx.subgraph(g,largest)
     return big
 
-def draw_network_quick(g,label_p=0.75,adjust_text=False,node_or_community_norm='neighbor',spatialization=nx.spring_layout):
+def draw_network_quick(g,label_p=0.75,adjust_text=False,node_or_community_norm='neighbor',spatialization=nx.layout.kamada_kawai_layout):
     '''Function for quick visualization of networkself.
     Choose the fraction of labels to be displayed, will be ordered by relative community degree or relative neighbor degree.
     Use the adjust_text to avoid label overlap.
-    node_or_community_norm: choose between 'neighbor' or 'community' or 'degree' '''
+    node_or_community_norm: choose between 'neighbor' or 'community' or 'degree'
+    Input spatialization function e.g. nx.spring_layout or nx.kamada_kawai_layout'''
     import matplotlib.pyplot as plt
     if node_or_community_norm=='neighbor':
         key = 'neighbor_relative_degree'
