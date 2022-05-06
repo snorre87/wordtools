@@ -243,10 +243,9 @@ def resolve_docs(docs,e2e,clean):
         l = []
         for w in doc:
             w2 = clean(w.lower())
-            if len(2)==0:
+            if len(w2)==0:
                 continue
-            if w in e2e:
-                w = resolve_ent(w,e2e)
+            w = resolve_ent(w,e2e)
             l.append(w)
             c[w]+=1
         docs2.append(l)
