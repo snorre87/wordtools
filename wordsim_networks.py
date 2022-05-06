@@ -254,6 +254,7 @@ def resolve_docs(docs,e2e,clean):
 def resolve_ent(e,e2e):
     if e in e2e:
         new = e2e[e]
+        return new # skip recursion for now.
         if new==e:
             return e
         # recursive part
@@ -534,32 +535,35 @@ def extract_largest_component(g):
     big = nx.subgraph(g,largest)
     return big
 
-def draw_network_quick(g,label_p=0.75,adjust_text=False,node_or_community_norm='neighbor',spatialization=nx.layout.kamada_kawai_layout):
+def draw_network_quick(g,label_p=0.75,adjust_text=False,node_or_community_norm='neighbor',spatialization=nx.layout.kamada_kawai_layout,custom_key=False):
     '''Function for quick visualization of networkself.
     Choose the fraction of labels to be displayed, will be ordered by relative community degree or relative neighbor degree.
     Use the adjust_text to avoid label overlap.
     node_or_community_norm: choose between 'neighbor' or 'community' or 'degree'
     Input spatialization function e.g. nx.spring_layout or nx.kamada_kawai_layout'''
     import matplotlib.pyplot as plt
-    if node_or_community_norm=='neighbor':
-        key = 'neighbor_relative_degree'
-        try:
-            sort = sorted(g,key=lambda x: g.nodes[x][key],reverse=True)
-        except:
-            print('will add neighbor relative degre')
-            g = add_neighbor_relative_degree(g)
-            sort = sorted(g,key=lambda x: g.nodes[x][key],reverse=True)
-    elif node_or_community_norm=='community':
-        key = 'relative_degree'
-        try:
-            sort = sorted(g,key=lambda x: g.nodes[x][key],reverse=True)
-        except:
-            print('will add community info')
-            g = add_community_relative_degree(g)
-            sort = sorted(g,key=lambda x: g.nodes[x][key],reverse=True)
+    if custom_key:
+        sort = sorted(g,key=lambda x: g.nodes[x][key],reverse=True)
     else:
-        print('Will order by degree')
-        sort = sorted(g,key=lambda x: len(g[x]),reverse=True)
+        if node_or_community_norm=='neighbor':
+            key = 'neighbor_relative_degree'
+            try:
+                sort = sorted(g,key=lambda x: g.nodes[x][key],reverse=True)
+            except:
+                print('will add neighbor relative degre')
+                g = add_neighbor_relative_degree(g)
+                sort = sorted(g,key=lambda x: g.nodes[x][key],reverse=True)
+        elif node_or_community_norm=='community':
+            key = 'relative_degree'
+            try:
+                sort = sorted(g,key=lambda x: g.nodes[x][key],reverse=True)
+            except:
+                print('will add community info')
+                g = add_community_relative_degree(g)
+                sort = sorted(g,key=lambda x: g.nodes[x][key],reverse=True)
+        else:
+            print('Will order by degree')
+            sort = sorted(g,key=lambda x: len(g[x]),reverse=True)
     top = sort[:int(len(g)*label_p)]
 
     try:
