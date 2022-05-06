@@ -155,13 +155,15 @@ def calculate_pmi_similarity(pmis,penalty_pmi = np.sqrt,max_inspected_edges = 25
     c,c2 = d[n],d[n2]
     cos_sims[(n,n2)] = cosine_modified(c,c2,n=n,n2=n2,remove_self_edges=remove_self_edges)
   return cos_sims
-def build_graph_from_similarities(cos_sims,check_diff = 0.01,min_sim=0.3,induce_sparsity=False,manual_cut=False,log=False,large_component_size=False):
+def build_graph_from_similarities(cos_sims,check_diff = 0.01,min_sim=False,induce_sparsity=False,manual_cut=False,log=False,large_component_size=False):
   if manual_cut:
     for edge, sim in tqdm.tqdm(Counter(cos_sims).most_common()):
       if sim<manual_cut:
         break
       g.add_edge(*edge,weight=sim)
     return g
+  if not min_sim:
+    min_sim = np.quantile(list(cos_sims.values()),0.9)
   g = nx.Graph()
   best_score = 0
   count = 0
