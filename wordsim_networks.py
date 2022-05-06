@@ -163,6 +163,8 @@ def calculate_pmi_similarity(pmis,penalty_pmi = np.sqrt,max_inspected_edges = 25
 def build_graph_from_similarities(cos_sims,check_diff = 0.01,min_sim=False,induce_sparsity=False,manual_cut=False,log=False,large_component_size=False):
   if manual_cut:
     for edge, sim in tqdm.tqdm(Counter(cos_sims).most_common()):
+      if edge[0]==edge[1]:
+        continue
       if sim<manual_cut:
         break
       g.add_edge(*edge,weight=sim)
@@ -224,6 +226,8 @@ def build_graph_from_similarities(cos_sims,check_diff = 0.01,min_sim=False,induc
   print('Cut found here:',stats)
   g = nx.Graph()
   for edge, sim in tqdm.tqdm(Counter(cos_sims).most_common()):
+    if edge[0]==edge[1]:
+      continue
     if sim<best_sim:
       break
     g.add_edge(*edge,weight=sim)
