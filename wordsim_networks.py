@@ -486,7 +486,7 @@ def extract_largest_component(g):
     big = nx.subgraph(g,largest)
     return big
 
-def draw_network_quick(g,label_p=0.75,adjust_text=False,node_or_community_norm='neighbor'):
+def draw_network_quick(g,label_p=0.75,adjust_text=False,node_or_community_norm='neighbor',spatialization=nx.spring_layout):
     '''Function for quick visualization of networkself.
     Choose the fraction of labels to be displayed, will be ordered by relative community degree or relative neighbor degree.
     Use the adjust_text to avoid label overlap.
@@ -519,8 +519,8 @@ def draw_network_quick(g,label_p=0.75,adjust_text=False,node_or_community_norm='
         g = add_community_relative_degree(g)
         community = [int(g.nodes[i]['community']) for i in g]
     colors = [plt.cm.tab20(i/max(community)) for i in community]
-    pos = nx.spring_layout(g)
-    fig = plt.figure(figsize=(30,20))
+    pos = spatialization(g)
+    fig = plt.figure(figsize=(40,30))
     nx.draw_networkx_nodes(g,pos=pos,node_color=colors)
     nx.draw_networkx_edges(g,pos=pos)
     labels = []
