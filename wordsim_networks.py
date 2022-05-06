@@ -228,10 +228,11 @@ def resolve_docs(docs,e2e,clean):
     for doc in docs:
         l = []
         for w in doc:
-            w = clean(w.lower())
+            w2 = clean(w.lower())
             if len(w)==0:
                 continue
-            w = resolve_ent(w,e2e)
+            if w2 in e2e:
+                w = resolve_ent(w,e2e)
             l.append(w)
             c[w]+=1
         docs2.append(l)
@@ -284,6 +285,8 @@ def prepare_docs(docs,clean=lambda x:x,stem=False,resolve_entities=True,return_e
             if e2==e:
                 continue
             if g.has_node(e2):
+                if len(g[e2])==0:
+                    continue
                 ent = sorted(g[e2],key=lambda x: c[x])[-1]
                 e2e[e]=ent
         del c2
