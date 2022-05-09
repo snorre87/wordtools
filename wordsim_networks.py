@@ -335,9 +335,19 @@ def prepare_docs(docs,clean=lambda x:x,stem=False,resolve_entities=True,return_e
         for doc in docs:
             for w in doc:
                 c[w]+=1
+    dfreq = Counter()
+    for doc in docs:
+        dfreq.update(set(doc))
     if return_e2e:
-        return docs,c,e2e
-    return docs,c
+        res_e2all = {e:[] for e in e2e.values()}
+        g = g.to_undirected()
+        for e in c:
+            e2 = clean(e.lower())
+            if e2 in e2e:
+                res = e2e[e2]
+                res_e2all[res].append(e)
+        return docs,c,dfreq,(e2e,res_e2all)
+    return docs,c,dfreq
 def calculate_pmi_scores(docs,custom_filter=lambda x: not x,c=False,min_cut=10,max_frac=0.25,min_edgecount=5,maximum_nodes=10000,pmi_min=1.2,remove_self_edges=True,edge_window=64,pmi_smoothing=10):
     cut = min_cut
     max_count = int(len(docs)*max_frac)
