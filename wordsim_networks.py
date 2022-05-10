@@ -242,6 +242,7 @@ def preprocess_default(doc):
         return nltk.word_tokenize(doc)
     return doc
 import codecs
+import nltk
 class DocsIter():
   def __init__(self,input, preprocess=preprocess_default, params={},postprocess=placeholder_func
   ,randomize_post=False):
@@ -250,18 +251,25 @@ class DocsIter():
     else:
         self.filename = False
     self.input = input
-    #self.f = codecs.open(filename,'r','utf-8')
-    self.i = -1
     self.params = params
     self.preprocess = preprocess
     self.postprocess = postprocess
     self.randomize_post = randomize_post
+    if type(self.input)!=str:
+        print('Preprocessing docs...')
+        proc = []
+        for doc in self.input:
+            proc.append(self.preprocess(doc,**self.params))
+        self.input = proc
+    #self.f = codecs.open(filename,'r','utf-8')
+    self.i = -1
+
   def __next__(self):
     if type(self.input)!=str:
         self.i+=1
-        if self.i>len(input):
+        doc = self.input[i]
+        if self.i>len(self.input):
             raise StopIteration
-        doc = self.preprocess(input[self.i],**self.params)
         if self.postprocess!=placeholder_func:
             doc = self.postprocess(doc)
         return doc
@@ -292,7 +300,7 @@ class Resolver():
         self.e2e = e2e
         self.phrases = phrases
     def resolve(self,w):
-        w2 = clean(w.lower())
+        w2 = self.clean(w.lower())
         if w2 in self.e2e:
             w = resolve_ent(w2,self.e2e)
         return w
@@ -347,7 +355,7 @@ def prepare_docs(docs,clean=lambda x:x,stem=False,resolve_entities=True,return_e
     Documents can be either a lists of strings, lists of tokenized docs or a path to a file for streaming data.
     Tokenization, Cleaning, Mapping between original and cleaned version to merge entities, and Phrasing using collocation detector.
     Phrases set to True if you want to locate bigrams before creating the cooccurence network."""
-    import nltk
+    docs = DocsIter(docs)
     if type(docs)==list:
         new_docs = []
         for doc in docs:
