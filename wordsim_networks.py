@@ -374,7 +374,7 @@ def prepare_docs(docs,clean=lambda x:x,stem=False,resolve_entities=True,return_e
     Tokenization, Cleaning, Mapping between original and cleaned version to merge entities, and Phrasing using collocation detector.
     Phrases set to True if you want to locate bigrams before creating the cooccurence network."""
     if not type(docs) == DocsIter:
-        docs = DocsIter(docs)
+        docs = DocsIter(docs,run_in_memory=run_in_memory)
     if stem:
         print('Not implemented yet, use custom clean function instead.')
     resolver = Resolver(e2e={},clean=clean)
