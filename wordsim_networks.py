@@ -431,19 +431,15 @@ def prepare_docs(docs,clean=lambda x:x,stem=False,resolve_entities=True,return_e
 def calculate_pmi_scores(docs,custom_filter=lambda x: not x,c=False,min_cut=10,max_frac=0.25,min_edgecount=5,maximum_nodes=10000,pmi_min=1.2,remove_self_edges=True,edge_window=64,pmi_smoothing=10):
 
     cut = min_cut
-    max_count = int(len(docs)*max_frac)
+
     if not c:
         c = Counter()
         for doc in docs:
-            if type(doc)==str:
-                doc = nltk.word_tokenize(doc)
-            doc = resolver.resolve_doc(doc)
             for w in doc:
                 c[w]+=1
 
     keep = set([i for i,count in c.most_common(maximum_nodes) if count>=cut and count<=max_count and not custom_filter(i)])
     print('%d nodes are kept using minimum cut.'%len(keep))
-    n_docs = len(docs)
     print('Start characterizing edges')
     edge_c = Counter()
     n_docs = 0
@@ -461,6 +457,8 @@ def calculate_pmi_scores(docs,custom_filter=lambda x: not x,c=False,min_cut=10,m
                     if n==n2:
                         continue
                 edge_c[tuple(sorted([n,n2]))] +=1
+    max_count = int(len(docs)*max_frac)
+
     pmis = {}
     alpha = pmi_smoothing # smoothing term
     out = []
