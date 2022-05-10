@@ -267,9 +267,8 @@ class DocsIter():
   def __next__(self):
     if type(self.input)!=str:
         self.i+=1
-        if self.i>len(self.input):
+        if self.i==len(self.input):
             raise StopIteration
-        
         doc = self.input[self.i]
         doc = self.postprocess(doc)
         return doc
