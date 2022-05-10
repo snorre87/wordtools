@@ -244,6 +244,7 @@ def preprocess_default(doc):
 import codecs
 import nltk
 class DocsIter():
+  """Class for iterating through documents, input can be list or filename with \n\r separated documents."""
   def __init__(self,input, preprocess=preprocess_default, params={},postprocess=placeholder_func
   ,randomize_post=False,process_on_the_fly=True):
     if type(input)==str:
@@ -369,7 +370,7 @@ def replace_phrases(text,phrases):
 
 def prepare_docs(docs,clean=lambda x:x,stem=False,resolve_entities=True,return_e2e=False,phrases=False):
     """Function for preparing documents.
-    Documents can be either a lists of strings, lists of tokenized docs or a path to a file for streaming data.
+    Documents can be either a lists of strings, lists of tokenized docs or a path to a file for streaming data (documents should be separated by '\n\r').
     Tokenization, Cleaning, Mapping between original and cleaned version to merge entities, and Phrasing using collocation detector.
     Phrases set to True if you want to locate bigrams before creating the cooccurence network."""
     docs = DocsIter(docs)
