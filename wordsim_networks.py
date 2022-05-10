@@ -270,8 +270,7 @@ class DocsIter():
         doc = self.input[i]
         if self.i>len(self.input):
             raise StopIteration
-        if self.postprocess!=placeholder_func:
-            doc = self.postprocess(doc)
+        doc = self.postprocess(doc)
         return doc
     temp_line = []
     while True:
