@@ -428,7 +428,7 @@ def prepare_docs(docs,clean=lambda x:x,stem=False,resolve_entities=True,return_e
                 res_e2all[res].append(e)
         return docs,c,dfreq,(e2e,res_e2all)
     return docs,c,dfreq
-def calculate_pmi_scores(docs,resolver,custom_filter=lambda x: not x,c=False,min_cut=10,max_frac=0.25,min_edgecount=5,maximum_nodes=10000,pmi_min=1.2,remove_self_edges=True,edge_window=64,pmi_smoothing=10):
+def calculate_pmi_scores(docs,custom_filter=lambda x: not x,c=False,min_cut=10,max_frac=0.25,min_edgecount=5,maximum_nodes=10000,pmi_min=1.2,remove_self_edges=True,edge_window=64,pmi_smoothing=10):
 
     cut = min_cut
     max_count = int(len(docs)*max_frac)
@@ -505,8 +505,8 @@ clean=lambda x:x, pmi_smoothing=10,return_knn=False
     cut = min_cut
     topn = topn_edges
     max_count = int(len(docs)*max_frac)
-    docs,c,dfreq,resolver = prepare_docs(docs,clean=clean,stem=stem,phrases=phrases)
-    pmis,edge_c,keep = calculate_pmi_scores(docs,resolver,custom_filter=custom_filter,c=c,min_cut=min_cut,max_frac=max_frac,min_edgecount=min_edgecount,maximum_nodes=maximum_nodes
+    docs,c,dfreq = prepare_docs(docs,clean=clean,stem=stem,phrases=phrases)
+    pmis,edge_c,keep = calculate_pmi_scores(docs,custom_filter=custom_filter,c=c,min_cut=min_cut,max_frac=max_frac,min_edgecount=min_edgecount,maximum_nodes=maximum_nodes
     ,pmi_min=pmi_min,remove_self_edges=remove_self_edges
     ,edge_window=edge_window,pmi_smoothing=pmi_smoothing)
     if target_average_degree!=False:
