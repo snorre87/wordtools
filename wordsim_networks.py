@@ -297,6 +297,8 @@ class DocsIter():
         self.f = codecs.open(self.filename,'r','utf-8')
     self.i = -1
     return self
+  def __repr__(self):
+      return self.input
 
 
 class Resolver():
