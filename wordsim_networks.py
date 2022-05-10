@@ -275,7 +275,6 @@ class DocsIter():
         self.i+=1
         if self.i==len(self.input):
             self.n_docs = self.i
-            print(self.n_docs)
             raise StopIteration
         doc = self.input[self.i]
         if self.process_on_the_fly:
@@ -295,6 +294,7 @@ class DocsIter():
         return doc
       if len(line)==0:
         self.f.close()
+        self.n_docs = self.i
         raise StopIteration
   def __iter__(self):
     if self.filename:
