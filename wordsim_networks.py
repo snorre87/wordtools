@@ -235,6 +235,49 @@ def build_graph_from_similarities(cos_sims,check_diff = 0.01,min_sim=False,induc
   if log:
     return g,pd.DataFrame(scores)
   return g
+def placeholder_func(doc):
+    return doc
+class DocsIter():
+  def __init__(self,input, preprocess=placeholder_func, params={},postprocess=placeholder_func
+  ,randomize_post=False):
+    if type(input)==str:
+        self.filename = input
+    else:
+        self.filename = False
+    self.input = input
+    #self.f = codecs.open(filename,'r','utf-8')
+    self.i = -1
+    self.params = params
+    self.preprocess = preprocess
+    self.postprocess = postprocess
+    self.randomize_post = randomize_post
+  def __next__(self):
+    if type(self.input)!=str:
+        self.i+=1
+        if self.i>len(input):
+            raise StopIteration
+        doc = self.preprocess(input[self.i],**self.params)
+        if self.postprocess!=placeholder_func:
+            doc = self.postprocess(doc)
+        return doc
+    temp_line = []
+    while True:
+      line = self.f.readline()
+      temp_line.append(line)
+      if '\r' in line:
+        doc = self.preprocess('\n'.join(temp_line),**self.params)
+        self.i+=1
+        #doc+=(['__out__']*5)
+        if self.postprocess!=placeholder_func:
+            doc = self.postprocess(doc)
+        return doc
+      if len(line)==0:
+        self.f.close()
+        raise StopIteration
+  def __iter__(self):
+    self.f = codecs.open(self.filename,'r','utf-8')
+    self.i = -1
+    return self
 
 
 class Resolver():
@@ -254,6 +297,12 @@ class Resolver():
         if type(self.phrases)!=type(False):
             l = self.phrases[l]
         return l
+    def __call__(self,obj):
+        if type(obj)==str:
+            return self.resolve(obj)
+        if type(obj)==list:
+            return self.resolve_doc(obj)
+        return False
 def resolve_docs(docs,e2e,clean):
     docs2 = []
     c = Counter()
@@ -289,6 +338,7 @@ def replace_phrases(text,phrases):
 
 def prepare_docs(docs,clean=lambda x:x,stem=False,resolve_entities=True,return_e2e=False,phrases=False):
     """Function for preparing documents.
+    Documents can be either a lists of strings, lists of tokenized docs or a path to a file for streaming data.
     Tokenization, Cleaning, Mapping between original and cleaned version to merge entities, and Phrasing using collocation detector.
     Phrases set to True if you want to locate bigrams before creating the cooccurence network."""
     import nltk
