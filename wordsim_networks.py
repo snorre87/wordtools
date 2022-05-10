@@ -260,11 +260,13 @@ class DocsIter():
         if not process_on_the_fly:
             print('Preprocessing docs...')
             proc = []
+
             for doc in self.input:
                 doc = self.preprocess(doc,**self.params)
                 doc = self.postprocess(doc)
                 proc.append(doc)
             self.input = proc
+            self.n_docs = len(proc)
     #self.f = codecs.open(filename,'r','utf-8')
     self.i = -1
 
@@ -272,6 +274,7 @@ class DocsIter():
     if type(self.input)!=str:
         self.i+=1
         if self.i==len(self.input):
+            self.n_docs = self.i
             raise StopIteration
         doc = self.input[self.i]
         if self.process_on_the_fly:
@@ -299,7 +302,13 @@ class DocsIter():
     return self
   def __repr__(self):
       return self.input
-
+  def __len__(self):
+      try:
+          return getattr(self,'n_docs')
+      except:
+          for doc in docs:
+              pass
+      return getattr(self,'n_docs')
 
 class Resolver():
     def __init__(self,clean,e2e,phrases=False):
