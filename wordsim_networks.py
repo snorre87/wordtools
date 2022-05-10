@@ -170,7 +170,7 @@ def build_graph_from_similarities(cos_sims,check_diff = 0.01,min_sim=False,induc
       g.add_edge(*edge,weight=sim)
     return g
   if not min_sim:
-    min_sim = np.quantile(list(cos_sims.values()),0.75)
+    min_sim = np.quantile(list(cos_sims.values()),0.5)
     print(min_sim)
   g = nx.Graph()
   best_score = 0
