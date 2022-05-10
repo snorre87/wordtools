@@ -446,17 +446,12 @@ def calculate_pmi_scores(docs,custom_filter=lambda x: not x,c=False,min_cut=10,m
         for doc in docs:
             for w in doc:
                 c[w]+=1
-    n_docs = 0
-    for doc in docs:
-        n_docs+=1
+    n_docs = len(docs)
     keep = set([i for i,count in c.most_common(maximum_nodes) if count>=cut and count<=max_count and not custom_filter(i)])
     print('%d nodes are kept using minimum cut.'%len(keep))
     print('Start characterizing edges')
     edge_c = Counter()
-    n_docs = 0
     for doc in docs:
-
-        n_docs+=1
         ents = [i for i in doc if i in keep]
         for i in range(len(ents)-1):
             n = ents[i]
