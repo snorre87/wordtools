@@ -241,6 +241,7 @@ def preprocess_default(doc):
     if type(doc)==str:
         return nltk.word_tokenize(doc)
     return doc
+import codecs
 class DocsIter():
   def __init__(self,input, preprocess=preprocess_default, params={},postprocess=placeholder_func
   ,randomize_post=False):
@@ -279,7 +280,8 @@ class DocsIter():
         self.f.close()
         raise StopIteration
   def __iter__(self):
-    self.f = codecs.open(self.filename,'r','utf-8')
+    if self.filename:
+        self.f = codecs.open(self.filename,'r','utf-8')
     self.i = -1
     return self
 
