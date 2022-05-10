@@ -373,7 +373,8 @@ def prepare_docs(docs,clean=lambda x:x,stem=False,resolve_entities=True,return_e
     Documents can be either a lists of strings, lists of tokenized docs or a path to a file for streaming data (documents should be separated by '\n\r').
     Tokenization, Cleaning, Mapping between original and cleaned version to merge entities, and Phrasing using collocation detector.
     Phrases set to True if you want to locate bigrams before creating the cooccurence network."""
-    docs = DocsIter(docs)
+    if not type(docs) == sim_net.DocsIter:
+        docs = DocsIter(docs)
     if stem:
         print('Not implemented yet, use custom clean function instead.')
     resolver = Resolver(e2e={},clean=clean)
@@ -442,13 +443,13 @@ def prepare_docs(docs,clean=lambda x:x,stem=False,resolve_entities=True,return_e
 def calculate_pmi_scores(docs,custom_filter=lambda x: not x,c=False,min_cut=10,max_frac=0.25,min_edgecount=5,maximum_nodes=10000,pmi_min=1.2,remove_self_edges=True,edge_window=64,pmi_smoothing=10):
 
     cut = min_cut
-
     if not c:
         c = Counter()
         for doc in docs:
             for w in doc:
                 c[w]+=1
     n_docs = len(docs)
+    max_count = int(n_docs*max_frac)
     keep = set([i for i,count in c.most_common(maximum_nodes) if count>=cut and count<=max_count and not custom_filter(i)])
     print('%d nodes are kept using minimum cut.'%len(keep))
     print('Start characterizing edges')
@@ -463,7 +464,7 @@ def calculate_pmi_scores(docs,custom_filter=lambda x: not x,c=False,min_cut=10,m
                     if n==n2:
                         continue
                 edge_c[tuple(sorted([n,n2]))] +=1
-    max_count = int(len(docs)*max_frac)
+
 
     pmis = {}
     alpha = pmi_smoothing # smoothing term
