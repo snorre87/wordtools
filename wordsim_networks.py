@@ -245,7 +245,7 @@ import codecs
 import nltk
 class DocsIter():
   """Class for iterating through documents, input can be list or filename with \n\r separated documents."""
-  def __init__(self,input, preprocess=preprocess_default, params={},postprocess=placeholder_func
+  def __init__(self,input,filter_func=lambda x: not x, preprocess=preprocess_default, params={},postprocess=placeholder_func
   ,randomize_post=False,run_in_memory=True):
     if type(input)==str:
         self.filename = input
@@ -264,6 +264,7 @@ class DocsIter():
 
             for doc in self.input:
                 doc = self.preprocess(doc,**self.params)
+                doc = [i for i in doc if not filter_func(i)]
                 doc = self.postprocess(doc)
                 proc.append(doc)
             self.input = proc
@@ -280,6 +281,7 @@ class DocsIter():
         doc = self.input[self.i]
         if not self.run_in_memory:
             doc = self.preprocess(doc,**self.params)
+            doc = [i for i in doc if not filter_func(i)]
             doc = self.postprocess(doc)
         return doc
     temp_line = []
@@ -288,9 +290,11 @@ class DocsIter():
       temp_line.append(line)
       if '\r' in line:
         doc = self.preprocess('\n'.join(temp_line),**self.params)
+        doc = [i for i in doc if not filter_func(i)]
         self.i+=1
         #doc+=(['__out__']*5)
         if self.postprocess!=placeholder_func:
+
             doc = self.postprocess(doc)
         return doc
       if len(line)==0:
@@ -368,13 +372,13 @@ def replace_phrases(text,phrases):
         text = text.replace(i,'_'.join(i.split()))
     return text
 
-def prepare_docs(docs,clean=lambda x:x,stem=False,resolve_entities=True,return_e2e=False,phrases=False,run_in_memory=True):
+def prepare_docs(docs,clean=lambda x:x,filter_func=lambda x: not x,stem=False,resolve_entities=True,return_e2e=False,phrases=False,run_in_memory=True):
     """Function for preparing documents.
     Documents can be either a lists of strings, lists of tokenized docs or a path to a file for streaming data (documents should be separated by '\n\r').
     Tokenization, Cleaning, Mapping between original and cleaned version to merge entities, and Phrasing using collocation detector.
     Phrases set to True if you want to locate bigrams before creating the cooccurence network."""
     if not type(docs) == DocsIter:
-        docs = DocsIter(docs,run_in_memory=run_in_memory)
+        docs = DocsIter(docs,run_in_memory=run_in_memory,filter_func=filter_func)
     if stem:
         print('Not implemented yet, use custom clean function instead.')
     resolver = Resolver(e2e={},clean=clean)
@@ -424,7 +428,7 @@ def prepare_docs(docs,clean=lambda x:x,stem=False,resolve_entities=True,return_e
         resolver.phrases = phrase_model_bi
         docs.postprocess = resolver
     if type(docs.input) ==list:
-        docs = DocsIter(docs.input,postprocess=resolver,run_in_memory=True)
+        docs = DocsIter(docs.input,filter_func=filter_func,postprocess=resolver,run_in_memory=True)
     dfreq = Counter()
     c = Counter()
     for doc in docs:
@@ -441,7 +445,6 @@ def prepare_docs(docs,clean=lambda x:x,stem=False,resolve_entities=True,return_e
         return docs,c,dfreq,(e2e,res_e2all)
     return docs,c,dfreq
 def calculate_pmi_scores(docs,custom_filter=lambda x: not x,c=False,min_cut=10,max_frac=0.25,min_edgecount=5,maximum_nodes=10000,pmi_min=1.2,remove_self_edges=True,edge_window=64,pmi_smoothing=10):
-
     cut = min_cut
     if not c:
         c = Counter()
