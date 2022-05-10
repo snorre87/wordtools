@@ -237,8 +237,12 @@ def build_graph_from_similarities(cos_sims,check_diff = 0.01,min_sim=False,induc
   return g
 def placeholder_func(doc):
     return doc
+def preprocess_default(doc):
+    if type(doc)==str:
+        return nltk.word_tokenize(doc)
+    return doc
 class DocsIter():
-  def __init__(self,input, preprocess=placeholder_func, params={},postprocess=placeholder_func
+  def __init__(self,input, preprocess=preprocess_default, params={},postprocess=placeholder_func
   ,randomize_post=False):
     if type(input)==str:
         self.filename = input
