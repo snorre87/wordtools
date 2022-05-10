@@ -275,6 +275,7 @@ class DocsIter():
         self.i+=1
         if self.i==len(self.input):
             self.n_docs = self.i
+            print(self.n_docs)
             raise StopIteration
         doc = self.input[self.i]
         if self.process_on_the_fly:
@@ -306,7 +307,7 @@ class DocsIter():
       try:
           return getattr(self,'n_docs')
       except:
-          for doc in docs:
+          for doc in self:
               pass
       return getattr(self,'n_docs')
 
