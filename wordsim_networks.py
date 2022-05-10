@@ -236,20 +236,42 @@ def build_graph_from_similarities(cos_sims,check_diff = 0.01,min_sim=False,induc
     return g,pd.DataFrame(scores)
   return g
 
+
+class Resolver():
+    def __init__(self,clean,e2e,phrases=False):
+        self.clean = clean
+        self.e2e = e2e
+        self.phrases = phrases
+    def resolve(self,w):
+        w2 = clean(w.lower())
+        if w2 in self.e2e:
+            w = resolve_ent(w2,self.e2e)
+        return w
+    def resolve_doc(self,doc):
+        l = []
+        for w in doc:
+            l.append(self.resolve(w))
+        if type(self.phrases)!=type(False):
+            l = self.phrases[l]
+        return l
 def resolve_docs(docs,e2e,clean):
     docs2 = []
     c = Counter()
     for doc in docs:
-        l = []
+        l = resolve_doc(doc,clean,e2e)
         for w in doc:
-            w2 = clean(w.lower())
-            if len(w2)==0:
-                continue
-            w = resolve_ent(w2,e2e)
-            l.append(w)
             c[w]+=1
         docs2.append(l)
     return docs2,c
+def resolve_doc(doc,clean,e2e):
+    for w in doc:
+        w2 = clean(w.lower())
+        if len(w2)==0:
+            continue
+        if w2 in e2e:
+            w = resolve_ent(w2,e2e)
+        l.append(w)
+    return l
 def resolve_ent(e,e2e):
     if e in e2e:
         new = e2e[e]
@@ -269,11 +291,15 @@ def prepare_docs(docs,clean=lambda x:x,stem=False,resolve_entities=True,return_e
     """Function for preparing documents.
     Tokenization, Cleaning, Mapping between original and cleaned version to merge entities, and Phrasing using collocation detector.
     Phrases set to True if you want to locate bigrams before creating the cooccurence network."""
-    import random
-    if type(random.choice(docs))==str:
-        print('Will tokenize data...')
-        import nltk
-        docs = [nltk.word_tokenize(doc) for doc in docs]
+    import nltk
+    if type(docs)==list:
+        new_docs = []
+        for doc in docs:
+            if type(doc)==str:
+                new_docs.append(nltk.word_tokenize(doc))
+            else:
+                new_docs.append(doc)
+        docs  = new_docs
         ## missing phraser.
     if stem:
         print('Not implemented yet, use custom clean function instead.')
@@ -281,7 +307,11 @@ def prepare_docs(docs,clean=lambda x:x,stem=False,resolve_entities=True,return_e
         print('Resolving entities to most common shared representation (after cleaning and lowercasing)')
         c = Counter()
         c2 = Counter()
+        n_docs = 0
         for doc in docs:
+            n_docs+=1
+            if type(doc)==str:
+                doc = nltk.word_tokenize(doc)
             for w in doc:
                 j = clean(w.lower())
                 if len(j)==0:
@@ -312,32 +342,65 @@ def prepare_docs(docs,clean=lambda x:x,stem=False,resolve_entities=True,return_e
                 ent = sorted(g[e2],key=lambda x: c[x])[-1]
                 e2e[e2]=ent
         del c2
-        docs,c = resolve_docs(docs,e2e,clean)
+        if type(docs)==list:
+            docs,c = resolve_docs(docs,e2e,clean)
+        else:
+            resolver = Resolver(e2e=e2e,clean=clean)
+            c = Counter()
+            for doc in docs:
+                if type(doc)==str:
+                    doc = nltk.word_tokenize(doc)
+                doc = resolver.resolve_doc(doc)
+                for w in doc:
+                    c[w]+=1
     else:
         c = Counter()
-        new_docs = []
-        for doc in docs:
-            new_doc = []
-            for w in doc:
-                w =clean(w)
-                c[w] +=1
-                new_doc.append(w)
-            new_docs.append(new_doc)
-        docs = new_docs
+        if type(docs)==list:
+            new_docs = []
+            for doc in docs:
+                if type(doc)==str:
+                    doc = nltk.word_tokenize(doc)
+                new_doc = []
+                for w in doc:
+                    w =clean(w)
+                    c[w] +=1
+                    new_doc.append(w)
+                new_docs.append(new_doc)
+            docs = new_docs
+            resolver = Resolver(e2e={},clean=clean)
+        else:
+            for doc in docs:
+                if type(doc)==str:
+                    doc = nltk.word_tokenize(doc)
+                for w in doc:
+                    w =clean(w)
+                    c[w] +=1
 
+            resolver = Resolver(e2e={},clean=clean)
     if phrases:
         print('Locating collocations...')
         from gensim.models.phrases import Phrases
         phrase_model_bi = Phrases(docs)
-        phrase_docs_bi = [phrase_model_bi[sent] for sent in docs]
-        docs = phrase_docs_bi
+        #phrase_docs_bi = [phrase_model_bi[sent] for sent in docs]
+        resolver.phrases = phrase_model_bi
+        #docs = phrase_docs_bi
         c = Counter()
         for doc in docs:
+            if type(doc)==str:
+                doc = nltk.word_tokenize(doc)
+
+            doc = resolver.resolve_doc(doc)
             for w in doc:
                 c[w]+=1
+    if not 'resolver' in locals():
+        resolver = Resolver(e2e={},clean=clean)
     dfreq = Counter()
     for doc in docs:
+        if type(doc)==str:
+            doc = nltk.word_tokenize(doc)
+        doc = resolver.resolve_doc(doc)
         dfreq.update(set(doc))
+
     if return_e2e:
         res_e2all = {e:[] for e in e2e.values()}
         g = g.to_undirected()
@@ -346,14 +409,18 @@ def prepare_docs(docs,clean=lambda x:x,stem=False,resolve_entities=True,return_e
             if e2 in e2e:
                 res = e2e[e2]
                 res_e2all[res].append(e)
-        return docs,c,dfreq,(e2e,res_e2all)
-    return docs,c,dfreq
-def calculate_pmi_scores(docs,custom_filter=lambda x: not x,c=False,min_cut=10,max_frac=0.25,min_edgecount=5,maximum_nodes=10000,pmi_min=1.2,remove_self_edges=True,edge_window=64,pmi_smoothing=10):
+        return docs,c,dfreq,resolver,(e2e,res_e2all)
+    return docs,c,dfreq,resolver
+def calculate_pmi_scores(docs,resolver,custom_filter=lambda x: not x,c=False,min_cut=10,max_frac=0.25,min_edgecount=5,maximum_nodes=10000,pmi_min=1.2,remove_self_edges=True,edge_window=64,pmi_smoothing=10):
+
     cut = min_cut
     max_count = int(len(docs)*max_frac)
     if not c:
         c = Counter()
         for doc in docs:
+            if type(doc)==str:
+                doc = nltk.word_tokenize(doc)
+                doc = resolver.resolve_doc(doc)
             for w in doc:
                 c[w]+=1
 
@@ -362,7 +429,12 @@ def calculate_pmi_scores(docs,custom_filter=lambda x: not x,c=False,min_cut=10,m
     n_docs = len(docs)
     print('Start characterizing edges')
     edge_c = Counter()
+    n_docs = 0
     for doc in docs:
+        if type(doc)==str:
+            doc = nltk.word_tokenize(doc)
+            doc = resolver.resolve_doc(doc)
+        n_docs+=1
         ents = [i for i in doc if i in keep]
         for i in range(len(ents)-1):
             n = ents[i]
@@ -416,8 +488,8 @@ clean=lambda x:x, pmi_smoothing=10,return_knn=False
     cut = min_cut
     topn = topn_edges
     max_count = int(len(docs)*max_frac)
-    docs,c = prepare_docs(docs,clean=clean,stem=stem,phrases=phrases)
-    pmis,edge_c,keep = calculate_pmi_scores(docs,custom_filter=custom_filter,c=c,min_cut=min_cut,max_frac=max_frac,min_edgecount=min_edgecount,maximum_nodes=maximum_nodes
+    docs,c,dfreq,resolver = prepare_docs(docs,clean=clean,stem=stem,phrases=phrases)
+    pmis,edge_c,keep = calculate_pmi_scores(docs,resolver,custom_filter=custom_filter,c=c,min_cut=min_cut,max_frac=max_frac,min_edgecount=min_edgecount,maximum_nodes=maximum_nodes
     ,pmi_min=pmi_min,remove_self_edges=remove_self_edges
     ,edge_window=edge_window,pmi_smoothing=pmi_smoothing)
     if target_average_degree!=False:
