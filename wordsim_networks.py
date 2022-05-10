@@ -245,7 +245,7 @@ import codecs
 import nltk
 class DocsIter():
   def __init__(self,input, preprocess=preprocess_default, params={},postprocess=placeholder_func
-  ,randomize_post=False):
+  ,randomize_post=False,process_on_the_fly=True):
     if type(input)==str:
         self.filename = input
     else:
@@ -255,12 +255,16 @@ class DocsIter():
     self.preprocess = preprocess
     self.postprocess = postprocess
     self.randomize_post = randomize_post
+    self.process_on_the_fly = process_on_the_fly
     if type(self.input)!=str:
-        print('Preprocessing docs...')
-        proc = []
-        for doc in self.input:
-            proc.append(self.preprocess(doc,**self.params))
-        self.input = proc
+        if not process_on_the_fly:
+            print('Preprocessing docs...')
+            proc = []
+            for doc in self.input:
+                doc = self.preprocess(doc,**self.params)
+                doc = self.postprocess(doc)
+                proc.append(doc)
+            self.input = proc
     #self.f = codecs.open(filename,'r','utf-8')
     self.i = -1
 
@@ -270,7 +274,9 @@ class DocsIter():
         if self.i==len(self.input):
             raise StopIteration
         doc = self.input[self.i]
-        doc = self.postprocess(doc)
+        if self.process_on_the_fly:
+            doc = self.preprocess(doc,**self.params)
+            doc = self.postprocess(doc)
         return doc
     temp_line = []
     while True:
@@ -355,26 +361,14 @@ def prepare_docs(docs,clean=lambda x:x,stem=False,resolve_entities=True,return_e
     Tokenization, Cleaning, Mapping between original and cleaned version to merge entities, and Phrasing using collocation detector.
     Phrases set to True if you want to locate bigrams before creating the cooccurence network."""
     docs = DocsIter(docs)
-    if type(docs)==list:
-        new_docs = []
-        for doc in docs:
-            if type(doc)==str:
-                new_docs.append(nltk.word_tokenize(doc))
-            else:
-                new_docs.append(doc)
-        docs  = new_docs
-        ## missing phraser.
     if stem:
         print('Not implemented yet, use custom clean function instead.')
+    resolver = Resolver(e2e={},clean=clean)
     if resolve_entities:
         print('Resolving entities to most common shared representation (after cleaning and lowercasing)')
         c = Counter()
         c2 = Counter()
-        n_docs = 0
         for doc in docs:
-            n_docs+=1
-            if type(doc)==str:
-                doc = nltk.word_tokenize(doc)
             for w in doc:
                 j = clean(w.lower())
                 if len(j)==0:
@@ -405,65 +399,23 @@ def prepare_docs(docs,clean=lambda x:x,stem=False,resolve_entities=True,return_e
                 ent = sorted(g[e2],key=lambda x: c[x])[-1]
                 e2e[e2]=ent
         del c2
-        if type(docs)==list:
-            docs,c = resolve_docs(docs,e2e,clean)
-        else:
-            resolver = Resolver(e2e=e2e,clean=clean)
-            c = Counter()
-            for doc in docs:
-                if type(doc)==str:
-                    doc = nltk.word_tokenize(doc)
-                doc = resolver.resolve_doc(doc)
-                for w in doc:
-                    c[w]+=1
-    else:
-        c = Counter()
-        if type(docs)==list:
-            new_docs = []
-            for doc in docs:
-                if type(doc)==str:
-                    doc = nltk.word_tokenize(doc)
-                new_doc = []
-                for w in doc:
-                    w =clean(w)
-                    c[w] +=1
-                    new_doc.append(w)
-                new_docs.append(new_doc)
-            docs = new_docs
-            resolver = Resolver(e2e={},clean=clean)
-        else:
-            for doc in docs:
-                if type(doc)==str:
-                    doc = nltk.word_tokenize(doc)
-                for w in doc:
-                    w =clean(w)
-                    c[w] +=1
+        resolver = Resolver(e2e=e2e,clean=clean)
+        docs.postprocess = resolver
 
-            resolver = Resolver(e2e={},clean=clean)
     if phrases:
         print('Locating collocations...')
         from gensim.models.phrases import Phrases
         phrase_model_bi = Phrases(docs)
         #phrase_docs_bi = [phrase_model_bi[sent] for sent in docs]
         resolver.phrases = phrase_model_bi
-        #docs = phrase_docs_bi
-        c = Counter()
-        for doc in docs:
-            if type(doc)==str:
-                doc = nltk.word_tokenize(doc)
-
-            doc = resolver.resolve_doc(doc)
-            for w in doc:
-                c[w]+=1
-    if not 'resolver' in locals():
-        resolver = Resolver(e2e={},clean=clean)
+        docs.postprocess = resolver
+    if type(docs.input) ==list:
+        docs = DocsIter(docs.input,postprocess=resolver,process_on_the_fly=False)
     dfreq = Counter()
+    c = Counter()
     for doc in docs:
-        if type(doc)==str:
-            doc = nltk.word_tokenize(doc)
-        doc = resolver.resolve_doc(doc)
         dfreq.update(set(doc))
-
+        c.update(Counter(doc))
     if return_e2e:
         res_e2all = {e:[] for e in e2e.values()}
         g = g.to_undirected()
@@ -472,8 +424,8 @@ def prepare_docs(docs,clean=lambda x:x,stem=False,resolve_entities=True,return_e
             if e2 in e2e:
                 res = e2e[e2]
                 res_e2all[res].append(e)
-        return docs,c,dfreq,resolver,(e2e,res_e2all)
-    return docs,c,dfreq,resolver
+        return docs,c,dfreq,(e2e,res_e2all)
+    return docs,c,dfreq
 def calculate_pmi_scores(docs,resolver,custom_filter=lambda x: not x,c=False,min_cut=10,max_frac=0.25,min_edgecount=5,maximum_nodes=10000,pmi_min=1.2,remove_self_edges=True,edge_window=64,pmi_smoothing=10):
 
     cut = min_cut
@@ -483,7 +435,7 @@ def calculate_pmi_scores(docs,resolver,custom_filter=lambda x: not x,c=False,min
         for doc in docs:
             if type(doc)==str:
                 doc = nltk.word_tokenize(doc)
-                doc = resolver.resolve_doc(doc)
+            doc = resolver.resolve_doc(doc)
             for w in doc:
                 c[w]+=1
 
