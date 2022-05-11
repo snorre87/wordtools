@@ -203,6 +203,8 @@ def build_graph_from_similarities(cos_sims,check_diff = 0.01,min_sim=False,induc
       if log:
           d = {'equality':unequal,'largest':largest,'sparsity':sparse,'ratio2next':ratio2next,
           'sim':sim,'n_edges':len(g.edges()),'n':len(g)}
+          d['clus'] = nx.average_clustering(g)
+          d['trans'] = nx.transitivity(g)
           scores.append(d)
       if induce_sparsity:
         score = np.log(largest)*sparse*unequal
