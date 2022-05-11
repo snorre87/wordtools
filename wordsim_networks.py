@@ -20,6 +20,14 @@ except:
         'pip install python-louvain')
         import community
 try:
+    import pyvis
+except:
+    inp = input('The pyvis module is not installed. Do you want to install? Press y. Used for interactive network visualization.')
+    if inp =='y':
+        os.system(
+        'pip install pyvis')
+        import pyvis
+try:
     import infomap
 except:
     pass
@@ -643,6 +651,20 @@ def extract_largest_component(g):
     big = nx.subgraph(g,largest)
     return big
 
+def interactive_network(g,output_name='interactive_net.html',in_notebook=True,button='all'):
+  from pyvis.network import Network
+  nt = Network('1000px', '1000px',notebook=False)
+  nt.from_nx(g)
+  if buttons=='all':
+    nt.show_buttons()
+  else:
+    nt.show_buttons(filter_=['physics']) # import or else layout cannot be stopped.
+  output_name = 'test.html'
+  nt.show(output_name)
+  # display or download
+  if in_notebook:
+    import IPython
+    IPython.display.HTML(filename=output_name)
 def draw_network_quick(g,label_p=0.75,adjust_text=False,node_or_community_norm='neighbor',spatialization=nx.layout.kamada_kawai_layout,custom_key=False):
     '''Function for quick visualization of networkself.
     Choose the fraction of labels to be displayed, will be ordered by relative community degree or relative neighbor degree.
