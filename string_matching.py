@@ -17,6 +17,7 @@ except:
         'pip install networkx')
     import networkx as nx
 import pandas as pd
+import tqdm
 def decode(str1):
     try:
         return str1.encode('utf-8').decode('ascii','ignore')
@@ -45,7 +46,7 @@ def get_similarities(a,a2,lower=True):
         return get_similarities(new,new2,lower=False)
     common = set()
     dat = []
-    for i in a:
+    for i in tqdm.tqdm(a):
         if i in a2:
             common.add(i)
             continue
