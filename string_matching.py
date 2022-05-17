@@ -59,11 +59,13 @@ def string_match(a,a2,lower=True,minimum=80,one2one = False,measure='robust',ret
     dat,common = get_similarities(a,a2,lower=True)
     if lower:
         back = {}
+
         for i in a:
             back[i.lower()] = i
+        back2 = {}
         for i in a2:
-            back[i.lower()] = i
-        common = [back[i] for i in common]
+            back2[i.lower()] = i
+
 
     trans = {i:i for i in common}
 
@@ -79,17 +81,13 @@ def string_match(a,a2,lower=True,minimum=80,one2one = False,measure='robust',ret
                 g.add_edge(i,j)
                 in_.add(i)
         for i in in_:
-            if lower:
-                trans[back[i]] = back[list(g[i].keys())[0]]
-            else:
-                trans[i] = list(g[i].keys())[0]
+            trans[i] = list(g[i].keys())[0]
     else:
         temp = sim.groupby('str1').apply(lambda x: x.str2.values[0])
         for i,j in temp.reset_index().values:
-            if lower:
-                trans[back[i]] = back[j]
-            else:
-                trans[i] = j
+            trans[i] = j
+    if lower:
+        trans = {back[i]:back2[j] for i,j in trans.items()}
     if return_data:
         return trans,pd.DataFrame(dat)
     return trans
