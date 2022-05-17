@@ -7,7 +7,15 @@ except:
         os.system(
         'pip install fuzzywuzzy')
     from fuzzywuzzy import fuzz
-import networkx as nx
+try:
+    import networkx as nx
+except:
+    import os
+    inp = input('The networkx package is not installed. Do you want to install? Press y.')
+    if inp =='y':
+        os.system(
+        'pip install networkx')
+    import networkx as nx
 
 def decode(str1):
     try:
