@@ -16,7 +16,7 @@ except:
         os.system(
         'pip install networkx')
     import networkx as nx
-
+import pandas as pd
 def decode(str1):
     try:
         return str1.encode('utf-8').decode('ascii','ignore')
