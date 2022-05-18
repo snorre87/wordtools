@@ -659,7 +659,6 @@ def interactive_network(g,output_name='interactive_net.html',in_notebook=True,bu
     nt.show_buttons()
   else:
     nt.show_buttons(filter_=['physics']) # import or else layout cannot be stopped.
-  output_name = 'test.html'
   nt.show(output_name)
   # display or download
   if in_notebook:
