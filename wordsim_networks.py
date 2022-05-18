@@ -651,7 +651,7 @@ def extract_largest_component(g):
     big = nx.subgraph(g,largest)
     return big
 
-def interactive_network(g,output_name='interactive_net.html',in_notebook=True,button='all'):
+def interactive_network(g,output_name='interactive_net.html',in_notebook=True,buttons='all'):
   from pyvis.network import Network
   nt = Network('1000px', '1000px',notebook=False)
   nt.from_nx(g)
