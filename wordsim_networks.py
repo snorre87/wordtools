@@ -170,11 +170,19 @@ def calculate_pmi_similarity(pmis,penalty_pmi = np.sqrt,max_inspected_edges = 25
   return cos_sims
 def build_graph_from_similarities(cos_sims,check_diff = 0.01,min_sim=False,induce_sparsity=False,manual_cut=False,log=False,large_component_size=False):
   if manual_cut:
+    ncount = 0
     for edge, sim in tqdm.tqdm(Counter(cos_sims).most_common()):
       if edge[0]==edge[1]:
         continue
       if sim<manual_cut:
         break
+      n,n1 = edge
+      if not g.has_node(n):
+          g.add_node(n,{'arrival':ncount})
+          ncount+=1
+      if not g.has_node(n2):
+          g.add_node(n2,{'arrival':ncount})
+          ncount+=1
       g.add_edge(*edge,weight=sim)
     return g
   if not min_sim:
@@ -183,6 +191,7 @@ def build_graph_from_similarities(cos_sims,check_diff = 0.01,min_sim=False,induc
   g = nx.Graph()
   best_score = 0
   count = 0
+  ncount = 0
   last_sim = max(cos_sims.values())
   if log:
       scores = []
@@ -193,6 +202,13 @@ def build_graph_from_similarities(cos_sims,check_diff = 0.01,min_sim=False,induc
   for edge, sim in tqdm.tqdm(Counter(cos_sims).most_common()):
     if edge[0]==edge[1]:
       continue
+    n,n1 = edge
+    if not g.has_node(n):
+        g.add_node(n,{'arrival':ncount})
+        ncount+=1
+    if not g.has_node(n2):
+        g.add_node(n2,{'arrival':ncount})
+        ncount+=1
     g.add_edge(*edge,weight=sim)
     if (last_sim-sim)>check_diff:
       last_sim = sim
