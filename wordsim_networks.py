@@ -204,10 +204,10 @@ def build_graph_from_similarities(cos_sims,check_diff = 0.01,min_sim=False,induc
       continue
     n,n1 = edge
     if not g.has_node(n):
-        g.add_node(n,{'arrival':ncount})
+        g.add_node(n,**{'arrival':ncount})
         ncount+=1
     if not g.has_node(n2):
-        g.add_node(n2,{'arrival':ncount})
+        g.add_node(n2,**{'arrival':ncount})
         ncount+=1
     g.add_edge(*edge,weight=sim)
     if (last_sim-sim)>check_diff:
