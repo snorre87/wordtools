@@ -4,6 +4,7 @@ __license__ = "Work in progress, please do not share or circulate"
 __version__ = 0.2
 __author__ = 'Snorre Ralund, PhD'
 import pandas as pd
+import matplotlib.pyplot as plt
 try:
     import networkx as nx
 except:
@@ -31,10 +32,10 @@ try:
     import infomap
 except:
     pass
-    #inp = input('The infomap community module is not installed. Do you want to install? Press y. Can work without.')
-    #if inp =='y':
-    #    os.system(
-    #    'pip install infomap')
+    inp = input('The infomap community module is not installed. Do you want to install? Press y. Can work without.')
+    if inp =='y':
+        os.system(
+        'pip install infomap')
     #    import infomap
 try:
     import gensim
