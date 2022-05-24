@@ -75,17 +75,22 @@ def run_infomap_alt(g):
 
     part = {num2u[i]:m for i,m in im.getModules().items()}
     return part
-def run_infomap(G):
+def find_communities(G,key='community_infomap', **kwargs):
     """
     Partition network with the Infomap algorithm.
     Annotates nodes with 'community' id.
     """
-    import infomap
-    im = infomap.Infomap("--two-level")
+
+    i2num = {i:num for num,i in enumerate(G)}
+    num2i = {num:i for i,num in i2num.items()}
+    g_num = nx.Graph()
+    for n,n2 in G.edges():
+        g_num.add_edge(i2num[n],i2num[n2])
+    im = Infomap(**kwargs)
 
     print("Building Infomap network from a NetworkX graph...")
 
-    im.add_networkx_graph(G)
+    im.add_networkx_graph(g_num)
 
     print("Find communities with Infomap...")
     im.run()
@@ -93,7 +98,13 @@ def run_infomap(G):
     print(f"Found {im.num_top_modules} modules with codelength: {im.codelength}")
 
     communities = im.get_modules()
-    nx.set_node_attributes(G, communities, 'community')
+
+    nx.set_node_attributes(g_num, communities, "community")
+    for n in g_num:
+        ni = num2i[n]
+        com = g_num.nodes[n]['community']
+        G.nodes[ni][key] = com
+    return G
 def add_community_relative_degree(g,method='louvain'):
     """Partition network using either 'infomap' or 'louvain' and compute community relative degree. Degree/max_degree of community
     Infomap is unstable, and might crash the run time."""
