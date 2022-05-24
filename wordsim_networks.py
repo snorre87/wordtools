@@ -289,6 +289,7 @@ class DocsIter():
         self.filename = input
     else:
         self.filename = False
+    self.filter_func = filter_func
     self.input = input
     self.params = params
     self.preprocess = preprocess
@@ -302,7 +303,7 @@ class DocsIter():
 
             for doc in self.input:
                 doc = self.preprocess(doc,**self.params)
-                doc = [i for i in doc if not filter_func(i)]
+                doc = [i for i in doc if not self.filter_func(i)]
                 doc = self.postprocess(doc)
                 proc.append(doc)
             self.input = proc
@@ -319,7 +320,7 @@ class DocsIter():
         doc = self.input[self.i]
         if not self.run_in_memory:
             doc = self.preprocess(doc,**self.params)
-            doc = [i for i in doc if not filter_func(i)]
+            doc = [i for i in doc if not self.filter_func(i)]
             doc = self.postprocess(doc)
         return doc
     temp_line = []
@@ -328,7 +329,7 @@ class DocsIter():
       temp_line.append(line)
       if '\r' in line:
         doc = self.preprocess('\n'.join(temp_line),**self.params)
-        doc = [i for i in doc if not filter_func(i)]
+        doc = [i for i in doc if not self.filter_func(i)]
         self.i+=1
         #doc+=(['__out__']*5)
         if self.postprocess!=placeholder_func:
