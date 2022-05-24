@@ -677,11 +677,22 @@ def extract_largest_component(g):
     largest = max(comps,key=len)
     big = nx.subgraph(g,largest)
     return big
+def add_hex_color(g,community_key='community',cm=plt.cm.tab20):
+    part = {}
+    for n in g:
+        part[n] = g.nodes[i][community_key]
+    coms = set(part.values())
+    p2col = {p:num/len(coms) for num,p in enumerate(coms)}
+    for n in g:
+        g.nodes[n]['color'] = p2col[part[n]]
+    return g
 
 def interactive_network(g,output_name='interactive_net.html',in_notebook=True,buttons='all'):
   from pyvis.network import Network
   nt = Network('1000px', '1000px',notebook=False)
+  g = add_hex_color(g)
   nt.from_nx(g)
+
   if buttons=='all':
     nt.show_buttons()
   else:
