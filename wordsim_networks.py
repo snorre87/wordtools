@@ -80,7 +80,7 @@ def find_communities(G,key='community_infomap', **kwargs):
     Partition network with the Infomap algorithm.
     Annotates nodes with 'community' id.
     """
-
+    from infomap import Infomap
     i2num = {i:num for num,i in enumerate(G)}
     num2i = {num:i for i,num in i2num.items()}
     g_num = nx.Graph()
