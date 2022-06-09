@@ -125,3 +125,4 @@ class Connector():
     # Using selenium it will not return a response object, instead you should call the browser object of the connector.
     ## connector.browser.page_source will give you the html.
       return None,call_id
+    return None,None
