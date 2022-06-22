@@ -269,7 +269,6 @@ def build_graph_from_similarities(cos_sims,check_diff = 0.01,min_sim=False,induc
   print('Cut found here:',stats)
   if mindefined:
     best_sim = min_sim
-  if largest+
   g = nx.Graph()
   for edge, sim in tqdm.tqdm(Counter(cos_sims).most_common()):
     if edge[0]==edge[1]:
