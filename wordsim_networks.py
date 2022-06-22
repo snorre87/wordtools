@@ -200,6 +200,9 @@ def build_graph_from_similarities(cos_sims,check_diff = 0.01,min_sim=False,induc
   if not min_sim:
     min_sim = np.quantile(list(cos_sims.values()),0.5)
     print(min_sim)
+    mindefined=False
+  else:
+    mindefined=True
   g = nx.Graph()
   best_score = 0
   count = 0
@@ -259,9 +262,14 @@ def build_graph_from_similarities(cos_sims,check_diff = 0.01,min_sim=False,induc
 
     count +=1
     if sim<=min_sim:
+      if largest_component_size:
+          mindefined = True
       break
   stats = {'best_score':best_score,'cut':best_sim}
   print('Cut found here:',stats)
+  if mindefined:
+    best_sim = min_sim
+  if largest+
   g = nx.Graph()
   for edge, sim in tqdm.tqdm(Counter(cos_sims).most_common()):
     if edge[0]==edge[1]:
