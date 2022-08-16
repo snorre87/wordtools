@@ -358,6 +358,7 @@ class DocsIter():
       try:
           return getattr(self,'n_docs')
       except:
+        
           for doc in self:
               pass
       return getattr(self,'n_docs')
@@ -418,7 +419,12 @@ def replace_phrases(text,phrases):
         text = text.replace(i,'_'.join(i.split()))
     return text
 
-def prepare_docs(docs,clean=lambda x:x,filter_func=lambda x: not x,stem=False,resolve_entities=True,return_e2e=False,phrases=False,run_in_memory=True):
+def trim_counter(c,max_tokens,p=0.75):
+    nnew = int(max_tokens*p)
+    c = Counter(dict(c.most_common(nnew)))
+    return c
+
+def prepare_docs(docs,clean=lambda x:x,filter_func=lambda x: not x,stem=False,resolve_entities=True,return_e2e=False,phrases=False,run_in_memory=True,max_tokens=250000,verbose=False):
     """Function for preparing documents.
     Documents can be either a lists of strings, lists of tokenized docs or a path to a file for streaming data (documents should be separated by '\n\r').
     Tokenization, Cleaning, Mapping between original and cleaned version to merge entities, and Phrasing using collocation detector.
@@ -432,13 +438,23 @@ def prepare_docs(docs,clean=lambda x:x,filter_func=lambda x: not x,stem=False,re
         print('Resolving entities to most common shared representation (after cleaning and lowercasing)')
         c = Counter()
         c2 = Counter()
-        for doc in docs:
+        for num,doc in enumerate(docs):
+            if verbose:
+                if num%20000==0:
+                    print(num,len(c),len(c2),end='\r')
             for w in doc:
                 j = clean(w.lower())
                 if len(j)==0:
                     continue
                 c[w]+=1
                 c2[j]+=1
+            if len(c2)>max_tokens:
+                #nnew = int(max_tokens*0.75)
+                #c = Counter(dict(c.most_common(nnew)))
+                c2 = trim_counter(c2,max_tokens)
+                # trim c with c2
+                c = {i:c[i] for i in c if clean(i.lower()) in c2}
+                
         # Remove duplicates from different spellings and lowercasing
         ##missing apply optional lemmatizer or stemmer, the clean function could be a stemmer.
         g = nx.DiGraph()
@@ -480,6 +496,11 @@ def prepare_docs(docs,clean=lambda x:x,filter_func=lambda x: not x,stem=False,re
     for doc in docs:
         dfreq.update(set(doc))
         c.update(Counter(doc))
+        if len(c)>max_tokens:
+            dfreq = trim_counter(d_freq,max_tokens)
+            #nnew = int(max_tokens*0.9)
+            #dfreq = Counter(dict(dfreq.most_common(nnew)))
+            c = Counter({i:c[i] for i in dfreq})
     if return_e2e:
         res_e2all = {e:[] for e in e2e.values()}
         g = g.to_undirected()
@@ -490,7 +511,7 @@ def prepare_docs(docs,clean=lambda x:x,filter_func=lambda x: not x,stem=False,re
                 res_e2all[res].append(e)
         return docs,c,dfreq,(e2e,res_e2all)
     return docs,c,dfreq
-def calculate_pmi_scores(docs,custom_filter=lambda x: not x,c=False,min_cut=10,max_frac=0.25,min_edgecount=5,maximum_nodes=10000,pmi_min=1.2,remove_self_edges=True,edge_window=64,pmi_smoothing=10):
+def calculate_pmi_scores(docs,custom_filter=lambda x: not x,c=False,min_cut=10,max_frac=0.25,min_edgecount=5,max_edges=2500000,maximum_nodes=10000,pmi_min=1.2,remove_self_edges=True,edge_window=64,pmi_smoothing=10):
     cut = min_cut
     if not c:
         c = Counter()
@@ -513,8 +534,11 @@ def calculate_pmi_scores(docs,custom_filter=lambda x: not x,c=False,min_cut=10,m
                     if n==n2:
                         continue
                 edge_c[tuple(sorted([n,n2]))] +=1
-
-
+        if len(edge_c)>max_edges:
+            edge_c = trim_counter(edge_c,max_edges)
+            #nnew = int(max_edges*0.75)
+            #edge_c = Counter(dict(edge_c.most_common(nnew)))
+    print('Done counting edges')
     pmis = {}
     alpha = pmi_smoothing # smoothing term
     out = []
