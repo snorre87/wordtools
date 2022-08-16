@@ -358,7 +358,7 @@ class DocsIter():
       try:
           return getattr(self,'n_docs')
       except:
-        
+
           for doc in self:
               pass
       return getattr(self,'n_docs')
@@ -453,8 +453,8 @@ def prepare_docs(docs,clean=lambda x:x,filter_func=lambda x: not x,stem=False,re
                 #c = Counter(dict(c.most_common(nnew)))
                 c2 = trim_counter(c2,max_tokens)
                 # trim c with c2
-                c = {i:c[i] for i in c if clean(i.lower()) in c2}
-                
+                c = Counter({i:c[i] for i in c if clean(i.lower()) in c2})
+
         # Remove duplicates from different spellings and lowercasing
         ##missing apply optional lemmatizer or stemmer, the clean function could be a stemmer.
         g = nx.DiGraph()
