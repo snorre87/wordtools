@@ -497,7 +497,7 @@ def prepare_docs(docs,clean=lambda x:x,filter_func=lambda x: not x,stem=False,re
         dfreq.update(set(doc))
         c.update(Counter(doc))
         if len(c)>max_tokens:
-            dfreq = trim_counter(d_freq,max_tokens)
+            dfreq = trim_counter(dfreq,max_tokens)
             #nnew = int(max_tokens*0.9)
             #dfreq = Counter(dict(dfreq.most_common(nnew)))
             c = Counter({i:c[i] for i in dfreq})
