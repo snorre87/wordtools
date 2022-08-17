@@ -262,7 +262,7 @@ def build_graph_from_similarities(cos_sims,check_diff = 0.01,min_sim=False,induc
 
     count +=1
     if sim<=min_sim:
-      if largest_component_size:
+      if large_component_size:
         mindefined = True
       break
   stats = {'best_score':best_score,'cut':best_sim}
