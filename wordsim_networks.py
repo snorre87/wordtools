@@ -775,7 +775,7 @@ def draw_network_quick(g,label_p=0.75,adjust_text=False,node_or_community_norm='
     pos = spatialization(g)
     fig = plt.figure(figsize=(40,30))
     nx.draw_networkx_nodes(g,pos=pos,node_color=colors)
-    nx.draw_networkx_edges(g,pos=pos)
+    nx.draw_networkx_edges(g,pos=pos,alpha=0.05)
     labels = []
     for i in top:
         labels.append(plt.text(pos[i][0],pos[i][1],i,fontweight='bold'))
