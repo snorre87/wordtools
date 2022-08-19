@@ -1,7 +1,7 @@
 import os
 __copyright__ = "Copyright (C) Snorre Ralund"
 __license__ = "Work in progress, please do not share or circulate"
-__version__ = 0.2
+__version__ = 0.3
 __author__ = 'Snorre Ralund, PhD'
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -55,7 +55,11 @@ from collections import Counter
 import numpy as np
 import tqdm
 import os
+log = True
+import logging
 
+if log:
+    logging.basicConfig(filename='wordsimlog.log', encoding='utf-8', level=logging.DEBUG)
     ## edge based jaccard
 def jaccard_d(d,d2):
     nom = len(d&d2)
@@ -442,6 +446,7 @@ def prepare_docs(docs,clean=lambda x:x,filter_func=lambda x: not x,stem=False,re
             if verbose:
                 if num%20000==0:
                     print(num,len(c),len(c2),end='\r')
+                    logging.info('%d,%d,%d'%(num,len(c),len(c2)))
             for w in doc:
                 j = clean(w.lower())
                 if len(j)==0:
@@ -454,7 +459,7 @@ def prepare_docs(docs,clean=lambda x:x,filter_func=lambda x: not x,stem=False,re
                 c2 = trim_counter(c2,max_tokens)
                 # trim c with c2
                 c = Counter({i:c[i] for i in c if clean(i.lower()) in c2})
-
+        logging.info('Resolve')
         # Remove duplicates from different spellings and lowercasing
         ##missing apply optional lemmatizer or stemmer, the clean function could be a stemmer.
         g = nx.DiGraph()
@@ -481,7 +486,7 @@ def prepare_docs(docs,clean=lambda x:x,filter_func=lambda x: not x,stem=False,re
         del c2
         resolver = Resolver(e2e=e2e,clean=clean)
         docs.postprocess = resolver
-
+    logging.info('Done resolving')
     if phrases:
         print('Locating collocations...')
         from gensim.models.phrases import Phrases
@@ -491,6 +496,7 @@ def prepare_docs(docs,clean=lambda x:x,filter_func=lambda x: not x,stem=False,re
         docs.postprocess = resolver
     if type(docs.input) ==list:
         docs = DocsIter(docs.input,filter_func=filter_func,postprocess=resolver,run_in_memory=True)
+    logging.info('Count tokens')
     dfreq = Counter()
     c = Counter()
     for doc in docs:
@@ -523,6 +529,7 @@ def calculate_pmi_scores(docs,custom_filter=lambda x: not x,c=False,min_cut=10,m
     keep = set([i for i,count in c.most_common(maximum_nodes) if count>=cut and count<=max_count and not custom_filter(i)])
     print('%d nodes are kept using minimum cut.'%len(keep))
     print('Start characterizing edges')
+    logging.info('Begin counting edges')
     edge_c = Counter()
     for doc in docs:
         ents = [i for i in doc if i in keep]
@@ -538,6 +545,7 @@ def calculate_pmi_scores(docs,custom_filter=lambda x: not x,c=False,min_cut=10,m
             edge_c = trim_counter(edge_c,max_edges)
             #nnew = int(max_edges*0.75)
             #edge_c = Counter(dict(edge_c.most_common(nnew)))
+    logging.info('Done counting edges')
     print('Done counting edges')
     pmis = {}
     alpha = pmi_smoothing # smoothing term
@@ -558,6 +566,7 @@ def calculate_pmi_scores(docs,custom_filter=lambda x: not x,c=False,min_cut=10,m
     for edge in out:
         del edge_c[edge]
     print('PMI done.')
+    logging.info('PMI done')
     return pmis,edge_c,keep
 def generate_similarity_network(docs,min_cut = 10,max_frac=0.25,phrases=False,min_edgecount=5,maximum_nodes = 10000,stem=False,topn_edges = 100000,target_average_degree=False,edge_window=128,large_component_size=False,
 custom_filter=lambda x: not x,
