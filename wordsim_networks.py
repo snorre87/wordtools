@@ -503,10 +503,12 @@ def prepare_docs(docs,clean=lambda x:x,filter_func=lambda x: not x,stem=False,re
         dfreq.update(set(doc))
         c.update(Counter(doc))
         if len(c)>max_tokens:
+            logging.info('trimming')
             dfreq = trim_counter(dfreq,max_tokens)
             #nnew = int(max_tokens*0.9)
             #dfreq = Counter(dict(dfreq.most_common(nnew)))
             c = Counter({i:c[i] for i in dfreq})
+    logging.info('done counting')
     if return_e2e:
         res_e2all = {e:[] for e in e2e.values()}
         g = g.to_undirected()
@@ -518,6 +520,7 @@ def prepare_docs(docs,clean=lambda x:x,filter_func=lambda x: not x,stem=False,re
         return docs,c,dfreq,(e2e,res_e2all)
     return docs,c,dfreq
 def calculate_pmi_scores(docs,custom_filter=lambda x: not x,c=False,min_cut=10,max_frac=0.25,min_edgecount=5,max_edges=2500000,maximum_nodes=10000,pmi_min=1.2,remove_self_edges=True,edge_window=64,pmi_smoothing=10):
+    logging.info('Calculate pmi')
     cut = min_cut
     if not c:
         c = Counter()
