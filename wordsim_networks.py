@@ -457,6 +457,7 @@ def prepare_docs(docs,clean=lambda x:x,filter_func=lambda x: not x,stem=False,re
                 #nnew = int(max_tokens*0.75)
                 #c = Counter(dict(c.most_common(nnew)))
                 c2 = trim_counter(c2,max_tokens)
+                logging.info('trimming')
                 # trim c with c2
                 c = Counter({i:c[i] for i in c if clean(i.lower()) in c2})
         logging.info('Resolve')
@@ -498,14 +499,16 @@ def prepare_docs(docs,clean=lambda x:x,filter_func=lambda x: not x,stem=False,re
         docs = DocsIter(docs.input,filter_func=filter_func,postprocess=resolver,run_in_memory=True)
     logging.info('Count tokens')
     dfreq = Counter()
+    count = 0
     c = Counter()
     for doc in docs:
         dfreq.update(set(doc))
         c.update(Counter(doc))
+        count+=1
         if len(c)>max_tokens:
-            logging.info('trimming')
+            logging.info('trimming %d %d %d'%(count,len(dfreq),len(c)))
             
-            dfreq = trim_counter(dfreq,int(max_tokens*0.85))
+            dfreq = trim_counter(dfreq,max_tokens)
             #nnew = int(max_tokens*0.9)
             #dfreq = Counter(dict(dfreq.most_common(nnew)))
             c = Counter({i:c[i] for i in dfreq})
@@ -520,7 +523,7 @@ def prepare_docs(docs,clean=lambda x:x,filter_func=lambda x: not x,stem=False,re
                 res_e2all[res].append(e)
         return docs,c,dfreq,(e2e,res_e2all)
     return docs,c,dfreq
-def calculate_pmi_scores(docs,custom_filter=lambda x: not x,c=False,min_cut=10,max_frac=0.25,min_edgecount=5,max_edges=2500000,maximum_nodes=10000,pmi_min=1.2,remove_self_edges=True,edge_window=64,pmi_smoothing=10):
+def calculate_pmi_scores(docs,custom_filter=lambda x: not x,c=False,min_cut=10,max_frac=0.25,min_edgecount=5,max_edges=5000000,maximum_nodes=10000,pmi_min=1.2,remove_self_edges=True,edge_window=64,pmi_smoothing=10):
     logging.info('Calculate pmi')
     cut = min_cut
     if not c:
@@ -546,7 +549,8 @@ def calculate_pmi_scores(docs,custom_filter=lambda x: not x,c=False,min_cut=10,m
                         continue
                 edge_c[tuple(sorted([n,n2]))] +=1
         if len(edge_c)>max_edges:
-            edge_c = trim_counter(edge_c,int(max_edges*0.85))
+            logging.info('trimming edges')
+            edge_c = trim_counter(edge_c,max_edges)
             #nnew = int(max_edges*0.75)
             #edge_c = Counter(dict(edge_c.most_common(nnew)))
     logging.info('Done counting edges')
