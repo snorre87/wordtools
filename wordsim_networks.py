@@ -504,7 +504,8 @@ def prepare_docs(docs,clean=lambda x:x,filter_func=lambda x: not x,stem=False,re
         c.update(Counter(doc))
         if len(c)>max_tokens:
             logging.info('trimming')
-            dfreq = trim_counter(dfreq,max_tokens)
+            
+            dfreq = trim_counter(dfreq,int(max_tokens*0.85))
             #nnew = int(max_tokens*0.9)
             #dfreq = Counter(dict(dfreq.most_common(nnew)))
             c = Counter({i:c[i] for i in dfreq})
@@ -545,7 +546,7 @@ def calculate_pmi_scores(docs,custom_filter=lambda x: not x,c=False,min_cut=10,m
                         continue
                 edge_c[tuple(sorted([n,n2]))] +=1
         if len(edge_c)>max_edges:
-            edge_c = trim_counter(edge_c,max_edges)
+            edge_c = trim_counter(edge_c,int(max_edges*0.85))
             #nnew = int(max_edges*0.75)
             #edge_c = Counter(dict(edge_c.most_common(nnew)))
     logging.info('Done counting edges')
