@@ -336,6 +336,10 @@ class DocsIter():
             self.input = proc
             self.n_docs = len(proc)
     if index_files:
+        if os.path.isdir(index_folder):
+            import shutil
+            shutil.rmtree(index_folder)
+        os.mkdir(index_folder)
         print('Indexing files')
         logging.info('indexing files')
         #self.index_files = [self.input+i for i in os.listdir(input)]
@@ -388,7 +392,7 @@ class DocsIter():
         # dump index
 
         pickle.dump(self.index,open(index_folder+'index.pkl','wb'))
-        self.n_docs = len(count)
+        self.n_docs = count
         self.current_index_list = pickle.load(open(index_folder+'0.pkl','rb'))
         self.folder = index_folder
         self.input = index_folder
