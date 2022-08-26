@@ -335,65 +335,65 @@ class DocsIter():
                 proc.append(doc)
             self.input = proc
             self.n_docs = len(proc)
-        if index_files:
-            print('Indexing files')
-            logging.info('indexing files')
-            #self.index_files = [self.input+i for i in os.listdir(input)]
-            # initialize index
-            self.index = {'__rare__':0}
-            proc = []
-            count = 0
-            ifilecount = 0
-            for doc in self.input:
-                doc = self.preprocess(doc,**self.params)
-                doc = [i for i in doc if not self.filter_func(i)]
-                doc = self.postprocess(doc)
-                proc.append(doc)
-                count+=1
-                if count%index_size==0:
-                    w_count = len(self.index)
-                    i_c = Counter()
-                    for d in proc:
-                        for w in d:
-                            if not w in self.index:
-                                i_c[w]+=1
-                    for w,cw in i_c.most_common():
-                        if cw<index_min:
-                            break
-                        self.index[w] = w_count
-                        w_count+=1
-                    newproc = []
-                    for d in proc:
-                        newproc.append([self.index[i] if i in self.index else 0 for i in d])
-                    # dump indexed file
-                    logging.info('dumping index file %d'%ifilecount)
-                    pickle.dump(newproc,open(index_folder+'%d.pkl'%ifilecount,'wb'))
-                    ifilecount+=1
-            w_count = len(self.index)
-            i_c = Counter()
-            for d in proc:
-                for w in d:
-                    if not w in self.index:
-                        i_c[w]+=1
-            for w,cw in i_c.most_common():
-                if cw<index_min:
-                    break
-                self.index[w] = w_count
-                w_count+=1
-            newproc = []
-            for d in proc:
-                newproc.append([self.index[i] if i in self.index else 0 for i in d])
-            # dump indexed file
-            pickle.dump(newproc,open(index_folder+'%d.pkl'%ifilecount,'wb'))
-            # dump index
+    if index_files:
+        print('Indexing files')
+        logging.info('indexing files')
+        #self.index_files = [self.input+i for i in os.listdir(input)]
+        # initialize index
+        self.index = {'__rare__':0}
+        proc = []
+        count = 0
+        ifilecount = 0
+        for doc in self.input:
+            doc = self.preprocess(doc,**self.params)
+            doc = [i for i in doc if not self.filter_func(i)]
+            doc = self.postprocess(doc)
+            proc.append(doc)
+            count+=1
+            if count%index_size==0:
+                w_count = len(self.index)
+                i_c = Counter()
+                for d in proc:
+                    for w in d:
+                        if not w in self.index:
+                            i_c[w]+=1
+                for w,cw in i_c.most_common():
+                    if cw<index_min:
+                        break
+                    self.index[w] = w_count
+                    w_count+=1
+                newproc = []
+                for d in proc:
+                    newproc.append([self.index[i] if i in self.index else 0 for i in d])
+                # dump indexed file
+                logging.info('dumping index file %d'%ifilecount)
+                pickle.dump(newproc,open(index_folder+'%d.pkl'%ifilecount,'wb'))
+                ifilecount+=1
+        w_count = len(self.index)
+        i_c = Counter()
+        for d in proc:
+            for w in d:
+                if not w in self.index:
+                    i_c[w]+=1
+        for w,cw in i_c.most_common():
+            if cw<index_min:
+                break
+            self.index[w] = w_count
+            w_count+=1
+        newproc = []
+        for d in proc:
+            newproc.append([self.index[i] if i in self.index else 0 for i in d])
+        # dump indexed file
+        pickle.dump(newproc,open(index_folder+'%d.pkl'%ifilecount,'wb'))
+        # dump index
 
-            pickle.dump(self.index,open(index_folder+'index.pkl','wb'))
-            self.n_docs = len(count)
-            self.current_index_list = pickle.load(open(index_folder+'0.pkl','rb'))
-            self.folder = index_folder
-            self.input = index_folder
-            self.index_i = 0
-            self.new_index = True
+        pickle.dump(self.index,open(index_folder+'index.pkl','wb'))
+        self.n_docs = len(count)
+        self.current_index_list = pickle.load(open(index_folder+'0.pkl','rb'))
+        self.folder = index_folder
+        self.input = index_folder
+        self.index_i = 0
+        self.new_index = True
     #self.f = codecs.open(filename,'r','utf-8')
     self.i = -1
 
