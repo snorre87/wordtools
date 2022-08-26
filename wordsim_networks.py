@@ -304,6 +304,7 @@ class DocsIter():
     self.postprocess = postprocess
     self.randomize_post = randomize_post
     self.run_in_memory=run_in_memory
+    self.postprocess_on = True
     if type(self.input)!=str:
         if run_in_memory:
             print('Preprocessing docs...')
@@ -312,7 +313,8 @@ class DocsIter():
             for doc in self.input:
                 doc = self.preprocess(doc,**self.params)
                 doc = [i for i in doc if not self.filter_func(i)]
-                doc = self.postprocess(doc)
+                if self.postprocess_on:
+                    doc = self.postprocess(doc)
                 proc.append(doc)
             self.input = proc
             self.n_docs = len(proc)
@@ -353,7 +355,8 @@ class DocsIter():
         for doc in self:
             doc = self.preprocess(doc,**self.params)
             doc = [i for i in doc if not self.filter_func(i)]
-            doc = self.postprocess(doc)
+            if self.postprocess_on:
+                doc = self.postprocess(doc)
             proc.append(doc)
             count+=1
             if count%index_size==0:
@@ -427,6 +430,7 @@ class DocsIter():
         if self.new_index == False:
             doc = self.preprocess(doc,**self.params)
             doc = [i for i in doc if not self.filter_func(i)]
+        if self.postprocess_on:
             doc = self.postprocess(doc)
         return doc
 
@@ -440,7 +444,8 @@ class DocsIter():
         if not self.run_in_memory:
             doc = self.preprocess(doc,**self.params)
             doc = [i for i in doc if not self.filter_func(i)]
-            doc = self.postprocess(doc)
+            if self.postprocess_on:
+                doc = self.postprocess(doc)
         return doc
     temp_line = []
     while True:
@@ -451,7 +456,7 @@ class DocsIter():
         doc = [i for i in doc if not self.filter_func(i)]
         self.i+=1
         #doc+=(['__out__']*5)
-        if self.postprocess!=placeholder_func:
+        if self.postprocess_on:
             doc = self.postprocess(doc)
         return doc
       if len(line)==0:
@@ -540,13 +545,13 @@ def trim_counter(c,max_tokens,p=0.75):
     c = Counter(dict(c.most_common(nnew)))
     return c
 
-def prepare_docs(docs,clean=lambda x:x,filter_func=lambda x: not x,stem=False,resolve_entities=True,return_e2e=False,phrases=False,run_in_memory=True,max_tokens=250000,verbose=False):
+def prepare_docs(docs,clean=lambda x:x,filter_func=lambda x: not x,stem=False,resolve_entities=True,return_e2e=False,phrases=False,run_in_memory=True,max_tokens=250000,verbose=False,index_files=True,index_folder='temp_indexed/'):
     """Function for preparing documents.
     Documents can be either a lists of strings, lists of tokenized docs or a path to a file for streaming data (documents should be separated by '\n\r').
     Tokenization, Cleaning, Mapping between original and cleaned version to merge entities, and Phrasing using collocation detector.
     Phrases set to True if you want to locate bigrams before creating the cooccurence network."""
     if not type(docs) == DocsIter:
-        docs = DocsIter(docs,run_in_memory=run_in_memory,filter_func=filter_func)
+        docs = DocsIter(docs,run_in_memory=run_in_memory,filter_func=filter_func,index_files=index_files,index_folder=index_folder)
     if stem:
         print('Not implemented yet, use custom clean function instead.')
     resolver = Resolver(e2e={},clean=clean)
@@ -607,7 +612,7 @@ def prepare_docs(docs,clean=lambda x:x,filter_func=lambda x: not x,stem=False,re
         #phrase_docs_bi = [phrase_model_bi[sent] for sent in docs]
         resolver.phrases = phrase_model_bi
         docs.postprocess = resolver
-    if type(docs.input) ==list:
+    if type(docs.input) == list:
         docs = DocsIter(docs.input,filter_func=filter_func,postprocess=resolver,run_in_memory=True)
     logging.info('Count tokens')
     dfreq = Counter()
@@ -619,7 +624,6 @@ def prepare_docs(docs,clean=lambda x:x,filter_func=lambda x: not x,stem=False,re
         count+=1
         if len(c)>max_tokens:
             logging.info('trimming %d %d %d'%(count,len(dfreq),len(c)))
-
             dfreq = trim_counter(dfreq,max_tokens)
             #nnew = int(max_tokens*0.9)
             #dfreq = Counter(dict(dfreq.most_common(nnew)))
