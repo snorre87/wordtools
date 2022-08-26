@@ -454,7 +454,7 @@ class DocsIter():
     self.i = -1
     return self
   def __repr__(self):
-      r\eturn self.input
+      return self.input
   def __len__(self):
       try:
           return getattr(self,'n_docs')
