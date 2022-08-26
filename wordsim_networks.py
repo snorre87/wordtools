@@ -295,27 +295,8 @@ import nltk
 class DocsIter():
   """Class for iterating through documents, input can be list or filename with \n\r separated documents."""
   def __init__(self,input,filter_func=lambda x: not x, preprocess=preprocess_default, params={},postprocess=placeholder_func
-  ,randomize_post=False,run_in_memory=True,index_files=False,index_size=25000,index_min=52,index_folder = 'temp_indexed/'):
-
-
-    if type(input)==str:
-        self.filename = input
-        self.folder = False
-        self.current_index_list = False
-        self.index_i = False
-        # check if input is a folder of indexed files
-        if os.path.isdir(input) and 'indexed' in input:
-            self.new_index = False
-            self.folder = input
-            self.index_i = 0
-            self.current_index_list = []
-            self.index = pickle.load(input+'index.pkl','rb')
-    else:
-        self.filename = False
-        self.folder = False
-        self.current_index_list = False
-        self.index_i = False
-
+  ,randomize_post=False,run_in_memory=True,index_files=False,index_size=50000,index_min=5,index_folder = 'temp_indexed/'):
+# index size and index min is a tradeoff between coverage (with bias for the first 50000) and efficiency of the index.
     self.filter_func = filter_func
     self.input = input
     self.params = params
@@ -335,6 +316,25 @@ class DocsIter():
                 proc.append(doc)
             self.input = proc
             self.n_docs = len(proc)
+    self.i = -1
+    if type(input)==str:
+        self.filename = input
+        self.folder = False
+        self.current_index_list = False
+        self.index_i = False
+        # check if input is a folder of indexed files
+        if os.path.isdir(input) and 'indexed' in input:
+            self.new_index = False
+            self.folder = input
+            self.index_i = -1
+            self.current_index_list = []
+            self.index = pickle.load(open(self.input+'index.pkl','rb'))
+    else:
+        self.filename = False
+        self.folder = False
+        self.current_index_list = False
+        self.index_i = False
+
     if index_files:
         if os.path.isdir(index_folder):
             import shutil
@@ -344,11 +344,12 @@ class DocsIter():
         logging.info('indexing files')
         #self.index_files = [self.input+i for i in os.listdir(input)]
         # initialize index
-        self.index = {'__rare__':0}
+        self.index = ['__rare__']
+        w2i = {}
         proc = []
         count = 0
         ifilecount = 0
-        for doc in self.input:
+        for doc in self:
             doc = self.preprocess(doc,**self.params)
             doc = [i for i in doc if not self.filter_func(i)]
             doc = self.postprocess(doc)
@@ -359,56 +360,63 @@ class DocsIter():
                 i_c = Counter()
                 for d in proc:
                     for w in d:
-                        if not w in self.index:
+                        if not w in w2i:
                             i_c[w]+=1
                 for w,cw in i_c.most_common():
                     if cw<index_min:
                         break
-                    self.index[w] = w_count
+                    w2i[w] = w_count
+                    self.index.append(w)
                     w_count+=1
                 newproc = []
                 for d in proc:
-                    newproc.append([self.index[i] if i in self.index else 0 for i in d])
+                    newproc.append([w2i[i] if i in w2i else 0 for i in d])
                 # dump indexed file
                 logging.info('dumping index file %d'%ifilecount)
                 pickle.dump(newproc,open(index_folder+'%d.pkl'%ifilecount,'wb'))
                 ifilecount+=1
+                proc = []
         w_count = len(self.index)
         i_c = Counter()
         for d in proc:
             for w in d:
-                if not w in self.index:
+                if not w in w2i:
                     i_c[w]+=1
         for w,cw in i_c.most_common():
             if cw<index_min:
                 break
-            self.index[w] = w_count
+            w2i[w] = w_count
+            self.index.append(w)
             w_count+=1
         newproc = []
         for d in proc:
-            newproc.append([self.index[i] if i in self.index else 0 for i in d])
+            newproc.append([w2i[i] if i in w2i else 0 for i in d])
         # dump indexed file
+        logging.info('%d %d %d doccount and indexfilecount and index len'%(count,ifilecount,len(self.index)))
         pickle.dump(newproc,open(index_folder+'%d.pkl'%ifilecount,'wb'))
         # dump index
-
+        print('done indexing')
         pickle.dump(self.index,open(index_folder+'index.pkl','wb'))
         self.n_docs = count
-        self.current_index_list = pickle.load(open(index_folder+'0.pkl','rb'))
+        self.current_index_list = []
+        #self.current_index_list = pickle.load(open(index_folder+'0.pkl','rb'))
+        #print(len(self.current_index_list))
         self.folder = index_folder
         self.input = index_folder
-        self.index_i = 0
+        self.index_i = -1
         self.new_index = True
     #self.f = codecs.open(filename,'r','utf-8')
     self.i = -1
 
   def __next__(self):
-    if self.index_i:
+    if type(self.index_i)!=bool:
         l = self.current_index_list
         if len(l)==0:
             # try to open next index files
             self.index_i+=1
-            if os.path.isfile(self.index_folder+'%d'%self.index_i):
-                self.current_index_list = pickle.load(open(self.index_folder+'%d'%self.index_i,'rb'))
+            if os.path.isfile(self.folder+'%d.pkl'%self.index_i):
+                self.current_index_list = pickle.load(open(self.folder+'%d.pkl'%self.index_i,'rb'))
+                l = self.current_index_list
             else:
                 self.n_docs = self.i+1
                 raise StopIteration
@@ -447,14 +455,16 @@ class DocsIter():
         return doc
       if len(line)==0:
         self.f.close()
-        self.n_docs = self.i
+        self.n_docs = self.i+1
         raise StopIteration
   def __iter__(self):
     if self.filename:
         self.f = codecs.open(self.filename,'r','utf-8')
-    if self.index:
+    if self.folder:
         self.index_i = -1
         self.current_index_list = []
+    else:
+        self.index_i = False
     self.i = -1
     return self
   def __repr__(self):
