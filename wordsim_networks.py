@@ -329,6 +329,7 @@ class DocsIter():
             self.index_i = -1
             self.current_index_list = []
             self.index = pickle.load(open(self.input+'index.pkl','rb'))
+            self.filename = False
     else:
         self.filename = False
         self.folder = False
