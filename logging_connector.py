@@ -59,7 +59,7 @@ class Connector():
       else:
         self.id = int(l[-1][0])+1
 
-  def get(self,url,project_name):
+  def get(self,url,project_name,**getkwargs):
     """Method for connector reliably to the internet, with multiple tries and simple error handling, as well as default logging function.
     Input url and the project name for the log (i.e. is it part of mapping the domain, or is it the part of the final stage in the data collection).
 
@@ -74,7 +74,7 @@ class Connector():
         ratelimit(self.waiting_time)
         t = time.time()
         try: # error handling
-          response = self.session.get(url,timeout = self.timeout) # make get call
+          response = self.session.get(url,timeout = self.timeout,**getkwargs) # make get call
 
           err = '' # define python error variable as empty assumming success.
           success = True # define success variable
