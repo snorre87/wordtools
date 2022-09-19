@@ -126,3 +126,7 @@ class Connector():
     ## connector.browser.page_source will give you the html.
       return None,call_id
     return None,None
+  def load_log(self):
+    import pandas as pd
+    df = pd.read_csv(self.logfilename,sep=';')
+    return df
