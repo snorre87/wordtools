@@ -37,8 +37,9 @@ def mark_sent(string,sent_sep = ' __sent__ '):
 	return sent_sep.join(nltk.tokenize.sent_tokenize(string))
 
 tweet_tokenize = nltk.tokenize.casual.TweetTokenizer()
-def process_documents(text,stopwords,tokenizer = 'tweet' , sentence = False):#= nltk.tokenize.casual.TweetTokenizer().tokenize):
+def process_documents(text,stopwords,tokenizer = 'tweet' , sentence = False,pre_clean=lambda x: x,post_clean=lambda x: x):#= nltk.tokenize.casual.TweetTokenizer().tokenize):
     text = ''.join(text)#.copy(
+    text = pre_clean(text)
     if tokenizer == 'tweet':
         tokenizer = tweet_tokenize.tokenize
     else:
@@ -53,12 +54,14 @@ def process_documents(text,stopwords,tokenizer = 'tweet' , sentence = False):#= 
     text = [i.lower() for i in text]
     # remove stopwords
     text = filter_words(text,stopwords)
+    text = post_clean(text)
     return text
 
 from nltk.corpus import stopwords
 stopwords = set(nltk.corpus.stopwords.words('danish'))#|set(open('danish_stopwords.txt','r').read().split('\n'))|set(['__digit__']) # danish
 
 
+### Function for creating sparse matrices
 
 def to_dense(corpus,vocab_size):
     X = np.zeros((len(corpus),vocab_size),dtype=np.int32)
@@ -99,7 +102,7 @@ def get_ngram(doc,n=2):
         grams+=['_'.join(doc[i:i+gram]) for i in range(len(doc)+1-gram)]
     return grams
 
-def make_index(texts,ngram=False,cutoff=5,max_words=100000):
+def make_index(texts,ngram=False,cutoff=5,max_words=100000,ngram_only=False):
     c = Counter()
     if ngram==False:
         for doc in texts:
@@ -109,13 +112,45 @@ def make_index(texts,ngram=False,cutoff=5,max_words=100000):
         for doc in texts:
             grams = get_ngram(doc,ngram)
             for w in grams:
+                if ngram_only:
+                    if w.count('_')!=ngram:
+                        continue
                 c[w]+=1
     return [w for w,count in c.most_common(max_words) if count>=cutoff]
 
-def process_docs(texts,tokenizer=nltk.word_tokenize,stopwords=set()):
-    docs = [process_documents(str(text),stopwords=stopwords,tokenizer=tokenizer) for text in texts]
+def process_docs(texts,tokenizer=nltk.word_tokenize,stopwords=set(),**kwargs):
+    "Function for tokenizing and simple cleaning of docs"
+    docs = [process_documents(str(text),stopwords=stopwords,tokenizer=tokenizer,**kwargs) for text in texts]
     return docs
+
+###
 def make_bows(docs,ngram=3,kwargs={}):
     Index = make_index(docs,ngram=ngram,**kwargs)
     bows = to_bow(docs,Index,ngram=ngram)
     return Index,bows
+
+
+class ngrams():
+  def __init__(self,phrasers=[]):
+    self.phrasers = phrasers
+  def get_phrase(self,sent,n=False):
+    if n!=False:
+      phrasers = self.phrasers[0:n-1]
+    else:
+      phrasers = self.phrasers
+    for phraser in phrasers:
+      sent = phraser[sent]
+    return sent
+from gensim.models.phrases import Phrases
+def make_phraser(docs,phrase_length=3):
+    """Input tokenized docs. Estimates collocations using the gensim.Phrases
+    Returns ngram class. Use .get_phrase(sent,n) to transform tokenized word lists to phrases of length n"""
+    models = []
+    for i in range(phrase_length-1):
+        model = Phrases(docs)
+        docs = [model[sent] for sent in docs]
+        docs = [[i.replace(' ','_') for i in doc] for doc in docs]
+        models.append(model)
+    models = [model.freeze() for model in models]
+    final_phraser = ngrams(models)
+    return final_phraser
