@@ -118,11 +118,6 @@ def make_index(texts,ngram=False,cutoff=5,max_words=100000,ngram_only=False):
                 c[w]+=1
     return [w for w,count in c.most_common(max_words) if count>=cutoff]
 
-def process_docs(texts,tokenizer=nltk.word_tokenize,stopwords=set(),**kwargs):
-    "Function for tokenizing and simple cleaning of docs"
-    docs = [process_documents(str(text),stopwords=stopwords,tokenizer=tokenizer,**kwargs) for text in texts]
-    return docs
-
 ###
 def make_bows(docs,ngram=3,kwargs={}):
     Index = make_index(docs,ngram=ngram,**kwargs)
@@ -154,3 +149,11 @@ def make_phraser(docs,phrase_length=3):
     models = [model.freeze() for model in models]
     final_phraser = ngrams(models)
     return final_phraser
+def process_docs(texts,tokenizer=nltk.word_tokenize,stopwords=set(),phrases=False,**kwargs):
+    "Function for tokenizing and simple cleaning of docs. Set phrases to 3 if you want to locate collocations"
+    docs = [process_documents(str(text),stopwords=stopwords,tokenizer=tokenizer,**kwargs) for text in texts]
+    if phrases!=False:
+        phraser = make_phraser(docs,phrases)
+        phrased_docs = [phraser.get_phrase(doc,phrases) for doc in docs]
+        return docs,phrased_docs,phraser
+    return docs
