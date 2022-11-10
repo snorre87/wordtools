@@ -1,4 +1,5 @@
 from scipy.optimize import curve_fit
+import numpy as np
 def line(x, a, b):
     return a * x + b
 def log_line(x,a,b):
@@ -63,4 +64,3 @@ def plot_fit(x,y,add_linear=False,ax=False,parameters=False,linear_only=False):
       return fig,ax,rq,pred,func,popt
     else:
       return fig,ax,rq,pred
-      
