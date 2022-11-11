@@ -1,5 +1,6 @@
 from scipy.optimize import curve_fit
 import numpy as np
+import matplotlib.pyplot as plt
 def line(x, a, b):
     return a * x + b
 def log_line(x,a,b):
