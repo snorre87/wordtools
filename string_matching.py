@@ -72,7 +72,8 @@ def string_match(a,a2,lower=True,minimum=80,one2one = False,measure='robust',ret
     sim = pd.DataFrame(dat)
     sim = sim[sim[measure]>=minimum]
     if len(sim)==0:
-        trans = {back[i]:back2[j] for i,j in trans.items()}
+        if lower:
+            trans = {back[i]:back2[j] for i,j in trans.items()}
         if return_data:
 
             return trans,pd.DataFrame(dat)
