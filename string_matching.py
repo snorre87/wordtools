@@ -70,7 +70,7 @@ def string_match(a,a2,lower=True,minimum=80,one2one = False,measure='robust',ret
     trans = {i:i for i in common}
 
     sim = pd.DataFrame(dat)
-    sim = sim[sim[measure]>=minimum]
+
     if len(sim)==0:
         if lower:
             trans = {back[i]:back2[j] for i,j in trans.items()}
@@ -78,6 +78,7 @@ def string_match(a,a2,lower=True,minimum=80,one2one = False,measure='robust',ret
 
             return trans,pd.DataFrame(dat)
         return trans
+    sim = sim[sim[measure]>=minimum]
     sim = sim.sort_values(measure,ascending=False)
 
     if one2one:
