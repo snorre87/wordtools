@@ -222,12 +222,6 @@ def build_graph_from_similarities(cos_sims,check_diff = 0.01,min_sim=False,induc
     if edge[0]==edge[1]:
       continue
     n,n1 = edge
-    if not g.has_node(n):
-        g.add_node(n,**{'arrival':ncount})
-        ncount+=1
-    if not g.has_node(n1):
-        g.add_node(n1,**{'arrival':ncount})
-        ncount+=1
     g.add_edge(*edge,weight=sim)
     if (last_sim-sim)>check_diff:
       last_sim = sim
@@ -274,11 +268,18 @@ def build_graph_from_similarities(cos_sims,check_diff = 0.01,min_sim=False,induc
   if mindefined:
     best_sim = min_sim
   g = nx.Graph()
+  ncount = 0
   for edge, sim in tqdm.tqdm(Counter(cos_sims).most_common()):
     if edge[0]==edge[1]:
       continue
     if sim<best_sim:
       break
+    if not g.has_node(n):
+      g.add_node(n,**{'arrival':ncount})
+      ncount+=1
+    if not g.has_node(n1):
+      g.add_node(n1,**{'arrival':ncount})
+      ncount+=1
     g.add_edge(*edge,weight=sim)
 
   if log:
