@@ -555,6 +555,13 @@ def prepare_docs(docs,clean=lambda x:x,filter_func=lambda x: not x,stem=False,re
         docs = DocsIter(docs,run_in_memory=run_in_memory,filter_func=filter_func,index_files=index_files,index_folder=index_folder)
     if stem:
         print('Not implemented yet, use custom clean function instead.')
+    lans = []
+    lan_count = Counter()
+    for doc in docs:
+        lan = langdetect.detect(doc)
+        lan_count[lan]+=1
+        lans.append(lan)
+    most_lan = lan_count.most_common(1)[0][0]
     resolver = Resolver(e2e={},clean=clean)
     if resolve_entities:
         print('Resolving entities to most common shared representation (after cleaning and lowercasing)')
@@ -616,13 +623,6 @@ def prepare_docs(docs,clean=lambda x:x,filter_func=lambda x: not x,stem=False,re
     if type(docs.input) == list:
         docs = DocsIter(docs.input,filter_func=filter_func,postprocess=resolver,run_in_memory=True)
     logging.info('Count tokens')
-    lans = []
-    lan_count = Counter()
-    for doc in docs:
-        lan = langdetect.detect(doc)
-        lan_count[lan]+=1
-        lans.append(lan)
-    most_lan = lan_count.most_common(1)[0][0]
     DFREQ = {lan:Counter() for lan,count in lan_count.most_common(max_lans)}
     C = {lan:Counter() for lan in languages}
     count = 0
