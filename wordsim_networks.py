@@ -684,7 +684,7 @@ def prepare_docs(docs,clean=lambda x:x,filter_func=lambda x: not x,stem=False,re
                 res_e2all[res].append(e)
         return docs,c,dfreq,w2lan,lan_count,(e2e,res_e2all)
     return docs,c,dfreq,w2lan,lan_count
-def calculate_pmi_scores(docs,custom_filter=lambda x: not x,c=False,min_cut=10,max_frac=0.25,min_edgecount=5,max_edges=5000000,maximum_nodes=10000,pmi_min=1.2,remove_self_edges=True,edge_window=64,pmi_smoothing=10):
+def calculate_pmi_scores(docs,w2lan,lan_count,custom_filter=lambda x: not x,c=False,min_cut=10,max_frac=0.25,min_edgecount=5,max_edges=5000000,maximum_nodes=10000,pmi_min=1.2,remove_self_edges=True,edge_window=64,pmi_smoothing=10):
     logging.info('Calculate pmi')
     cut = min_cut
     if not c:
@@ -724,8 +724,10 @@ def calculate_pmi_scores(docs,custom_filter=lambda x: not x,c=False,min_cut=10,m
         if count<min_edgecount:
             out.append(edge)
             continue
-        p = (c[n]+alpha)/n_docs
-        p2 = (c[n2]+alpha)/n_docs
+        l1,l2 = w2lan[n],w2lan[n2]
+        nd1,nd2 = lan_count[l1],lan_count[l2]
+        p = (c[n]+alpha)/nd1
+        p2 = (c[n2]+alpha)/nd2
         m = count/n_docs
         pmi = m/(p*p2)
         if pmi<=pmi_min:
