@@ -560,7 +560,11 @@ def prepare_docs(docs,clean=lambda x:x,filter_func=lambda x: not x,stem=False,re
     for doc in docs:
         if not type(doc)==str:
             logging.info(type(doc))
-            lan = langdetect.detect(' '.join(doc))
+            temp = ' '.join(doc)
+            if len(temp) ==0:
+                lan = ''
+            else:
+                lan = langdetect.detect(temp)
         else:
             lan = langdetect.detect(doc)
         lan_count[lan]+=1
@@ -627,17 +631,21 @@ def prepare_docs(docs,clean=lambda x:x,filter_func=lambda x: not x,stem=False,re
     if type(docs.input) == list:
         docs = DocsIter(docs.input,filter_func=filter_func,postprocess=resolver,run_in_memory=True)
     logging.info('Count tokens')
-    DFREQ = {lan:Counter() for lan,count in lan_count.most_common(max_lans)}
+    languages,_ = zip(*lan_count.most_common(max_lans))
+    languages = set(languages)
+    DFREQ = {lan:Counter() for lan in languages}
     C = {lan:Counter() for lan in languages}
+    print(languages)
     count = 0
     for num,doc in enumerate(docs):
         lan = lans[num]
-        if lan in language_in:
+        if lan in languages:
             dfreq = DFREQ[lan]
             c = C[lan]
         else:
             dfreq = DFREQ[most_lan]
             c = C[most_lan]
+            lan = most_lan
         dfreq.update(set(doc))
         c.update(Counter(doc))
         count+=1
@@ -647,6 +655,8 @@ def prepare_docs(docs,clean=lambda x:x,filter_func=lambda x: not x,stem=False,re
             #nnew = int(max_tokens*0.9)
             #dfreq = Counter(dict(dfreq.most_common(nnew)))
             c = Counter({i:c[i] for i in dfreq})
+            DFREQ[lan] = dfreq
+            C[lan] = c
     w2lan = {}
     c2 = Counter()
     for lan,c in C.items():
@@ -728,7 +738,7 @@ def calculate_pmi_scores(docs,w2lan,lan_count,custom_filter=lambda x: not x,c=Fa
         if count<min_edgecount:
             out.append(edge)
             continue
-        l1,l2 = w2lan[n],w2lan[n2]
+        l1,l2 = w2lan[n][0],w2lan[n2][0]
         nd1,nd2 = lan_count[l1],lan_count[l2]
         p = (c[n]+alpha)/nd1
         p2 = (c[n2]+alpha)/nd2
