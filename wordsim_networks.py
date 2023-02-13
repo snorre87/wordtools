@@ -558,7 +558,11 @@ def prepare_docs(docs,clean=lambda x:x,filter_func=lambda x: not x,stem=False,re
     lans = []
     lan_count = Counter()
     for doc in docs:
-        lan = langdetect.detect(doc)
+        if not type(doc)==str:
+            logging.info(type(doc))
+            lan = langdetect.detect(' '.join(doc))
+        else:
+            lan = langdetect.detect(doc)
         lan_count[lan]+=1
         lans.append(lan)
     most_lan = lan_count.most_common(1)[0][0]
