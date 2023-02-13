@@ -545,8 +545,9 @@ def trim_counter(c,max_tokens,p=0.75):
     nnew = int(max_tokens*p)
     c = Counter(dict(c.most_common(nnew)))
     return c
-import langdetect
-def prepare_docs(docs,clean=lambda x:x,filter_func=lambda x: not x,stem=False,resolve_entities=True,return_e2e=False,phrases=False,run_in_memory=True,max_tokens=150000,verbose=False,index_files=True,index_folder='temp_indexed/',max_lans=3):
+import langdetect as ld
+profiles = ld.create_languages_profiles()
+def prepare_docs(docs,clean=lambda x:x,filter_func=lambda x: not x,stem=False,resolve_entities=True,return_e2e=False,phrases=False,run_in_memory=True,max_tokens=150000,verbose=False,index_files=True,index_folder='temp_indexed/',max_lans=3,trans_lans = {'sv':'da','no':'da'},detector=False):
     """Function for preparing documents.
     Documents can be either a lists of strings, lists of tokenized docs or a path to a file for streaming data (documents should be separated by '\n\r').
     Tokenization, Cleaning, Mapping between original and cleaned version to merge entities, and Phrasing using collocation detector.
@@ -564,11 +565,19 @@ def prepare_docs(docs,clean=lambda x:x,filter_func=lambda x: not x,stem=False,re
             if len(temp) ==0:
                 lan = ''
             else:
-                lan = langdetect.detect(temp)
+                if detector!=False:
+                    lan = detector(temp)
+                else:
+                    lan = ld.detect(temp)
         else:
-            lan = langdetect.detect(doc)
-        lan_count[lan]+=1
+            if detector!=False:
+                lan = detector(doc)
+            else:
+                lan = ld.detect(doc)
+        if lan in trans_lans:
+            lan = trans_lans[lan]
         lans.append(lan)
+        lan_count[lan]+=1
     most_lan = lan_count.most_common(1)[0][0]
     resolver = Resolver(e2e={},clean=clean)
     if resolve_entities:
@@ -631,8 +640,10 @@ def prepare_docs(docs,clean=lambda x:x,filter_func=lambda x: not x,stem=False,re
     if type(docs.input) == list:
         docs = DocsIter(docs.input,filter_func=filter_func,postprocess=resolver,run_in_memory=True)
     logging.info('Count tokens')
+    if detector!=False:
+        max_lans = len(lan_count)
     languages,_ = zip(*lan_count.most_common(max_lans))
-    languages = set(languages)
+    languages = set(languages)-set([''])
     DFREQ = {lan:Counter() for lan in languages}
     C = {lan:Counter() for lan in languages}
     print(languages)
