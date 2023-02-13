@@ -546,7 +546,7 @@ def trim_counter(c,max_tokens,p=0.75):
     c = Counter(dict(c.most_common(nnew)))
     return c
 
-def prepare_docs(docs,clean=lambda x:x,filter_func=lambda x: not x,stem=False,resolve_entities=True,return_e2e=False,phrases=False,run_in_memory=True,max_tokens=250000,verbose=False,index_files=True,index_folder='temp_indexed/'):
+def prepare_docs(docs,clean=lambda x:x,filter_func=lambda x: not x,stem=False,resolve_entities=True,return_e2e=False,phrases=False,run_in_memory=True,max_tokens=150000,verbose=False,index_files=True,index_folder='temp_indexed/',max_lans=3):
     """Function for preparing documents.
     Documents can be either a lists of strings, lists of tokenized docs or a path to a file for streaming data (documents should be separated by '\n\r').
     Tokenization, Cleaning, Mapping between original and cleaned version to merge entities, and Phrasing using collocation detector.
@@ -616,10 +616,24 @@ def prepare_docs(docs,clean=lambda x:x,filter_func=lambda x: not x,stem=False,re
     if type(docs.input) == list:
         docs = DocsIter(docs.input,filter_func=filter_func,postprocess=resolver,run_in_memory=True)
     logging.info('Count tokens')
-    dfreq = Counter()
-    count = 0
-    c = Counter()
+    lans = []
+    lan_count = Counter()
     for doc in docs:
+        lan = langdetect.detect(doc)
+        lan_count[lan]+=1
+        lans.append(lan)
+    most_lan = lan_count.most_common(1)[0][0]
+    DFREQ = {lan:Counter() for lan,count in lan_count.most_common(max_lans))}
+    C = {lan:Counter() for lan in languages}
+    count = 0
+    for num,doc in enumerate(docs):
+        lan = lans[num]
+        if lan in language_in:
+            dfreq = DFREQ[lan]
+            c = C[lan]
+        else:
+            dfreq = DFREQ[most_lan]
+            c = C[most_lan]
         dfreq.update(set(doc))
         c.update(Counter(doc))
         count+=1
@@ -629,6 +643,36 @@ def prepare_docs(docs,clean=lambda x:x,filter_func=lambda x: not x,stem=False,re
             #nnew = int(max_tokens*0.9)
             #dfreq = Counter(dict(dfreq.most_common(nnew)))
             c = Counter({i:c[i] for i in dfreq})
+    w2lan = {}
+    c2 = Counter()
+    for lan,c in C.items():
+        c2.update(c)
+    # mmake language specific counts and freqs
+    
+    # assigning word to the language with highest percentage
+    # might assign certain words to rare languages by coincidence
+    # avoid by having a minumum count.
+    c = Counter()
+    dfreq = Counter()
+    for w,count in c2.most_common(max_tokens):
+        pm = 0
+        cm = 0
+        best = most_lan
+        for lan in C:
+            lanc = lan_count[lan]
+            count = C[lan][w]
+            if count<4:
+                continue
+            p = count/lanc
+            if p>pm:
+                pm = p
+                best = lan
+                cm = count
+        if pm ==0:
+            continue
+        w2lan[w] = (best,pm)
+        dfreq[w] = pm
+        c[w] = count
     logging.info('done counting')
     if return_e2e:
         res_e2all = {e:[] for e in e2e.values()}
@@ -638,8 +682,8 @@ def prepare_docs(docs,clean=lambda x:x,filter_func=lambda x: not x,stem=False,re
             if e2 in e2e:
                 res = e2e[e2]
                 res_e2all[res].append(e)
-        return docs,c,dfreq,(e2e,res_e2all)
-    return docs,c,dfreq
+        return docs,c,dfreq,w2lan,lan_count,(e2e,res_e2all)
+    return docs,c,dfreq,w2lan,lan_count
 def calculate_pmi_scores(docs,custom_filter=lambda x: not x,c=False,min_cut=10,max_frac=0.25,min_edgecount=5,max_edges=5000000,maximum_nodes=10000,pmi_min=1.2,remove_self_edges=True,edge_window=64,pmi_smoothing=10):
     logging.info('Calculate pmi')
     cut = min_cut
