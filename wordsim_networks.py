@@ -545,7 +545,7 @@ def trim_counter(c,max_tokens,p=0.75):
     nnew = int(max_tokens*p)
     c = Counter(dict(c.most_common(nnew)))
     return c
-
+import langdetect
 def prepare_docs(docs,clean=lambda x:x,filter_func=lambda x: not x,stem=False,resolve_entities=True,return_e2e=False,phrases=False,run_in_memory=True,max_tokens=150000,verbose=False,index_files=True,index_folder='temp_indexed/',max_lans=3):
     """Function for preparing documents.
     Documents can be either a lists of strings, lists of tokenized docs or a path to a file for streaming data (documents should be separated by '\n\r').
@@ -648,7 +648,7 @@ def prepare_docs(docs,clean=lambda x:x,filter_func=lambda x: not x,stem=False,re
     for lan,c in C.items():
         c2.update(c)
     # mmake language specific counts and freqs
-    
+
     # assigning word to the language with highest percentage
     # might assign certain words to rare languages by coincidence
     # avoid by having a minumum count.
