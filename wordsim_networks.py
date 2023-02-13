@@ -623,7 +623,7 @@ def prepare_docs(docs,clean=lambda x:x,filter_func=lambda x: not x,stem=False,re
         lan_count[lan]+=1
         lans.append(lan)
     most_lan = lan_count.most_common(1)[0][0]
-    DFREQ = {lan:Counter() for lan,count in lan_count.most_common(max_lans))}
+    DFREQ = {lan:Counter() for lan,count in lan_count.most_common(max_lans)}
     C = {lan:Counter() for lan in languages}
     count = 0
     for num,doc in enumerate(docs):
