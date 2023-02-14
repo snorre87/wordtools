@@ -1,4 +1,4 @@
-import os
+tqdm(import os
 __copyright__ = "Copyright (C) Snorre Ralund"
 __license__ = "Work in progress, please do not share or circulate"
 __version__ = 0.3
@@ -175,7 +175,7 @@ def calculate_pmi_similarity(pmis,penalty_pmi = np.sqrt,max_inspected_edges = 25
     except:
       d[n2] = Counter({n:pmi})
   cos_sims = {}
-  for (n,n2),_ in tqdm.tqdm(most):
+  for (n,n2),_ in tqdm(most):
     if n==n2: # Not until now we remove self edges no matter what.
       continue
     c,c2 = d[n],d[n2]
@@ -187,7 +187,7 @@ def calculate_pmi_similarity(pmis,penalty_pmi = np.sqrt,max_inspected_edges = 25
 def build_graph_from_similarities(cos_sims,check_diff = 0.01,min_sim=False,induce_sparsity=False,manual_cut=False,log=False,large_component_size=False):
   if manual_cut:
     ncount = 0
-    for edge, sim in tqdm.tqdm(Counter(cos_sims).most_common()):
+    for edge, sim in tqdm(Counter(cos_sims).most_common()):
       if edge[0]==edge[1]:
         continue
       if sim<manual_cut:
@@ -218,7 +218,7 @@ def build_graph_from_similarities(cos_sims,check_diff = 0.01,min_sim=False,induc
     print('Locating optimal cut point, maximizing sparsity, degree equally and logged component size...')
   else:
     print('Locating optimal cut point, maximizing sparsity, degree equally and logged component size, and ratio2next biggest component... ')
-  for edge, sim in tqdm.tqdm(Counter(cos_sims).most_common()):
+  for edge, sim in tqdm(Counter(cos_sims).most_common()):
     if edge[0]==edge[1]:
       continue
     n,n1 = edge
@@ -270,7 +270,7 @@ def build_graph_from_similarities(cos_sims,check_diff = 0.01,min_sim=False,induc
     best_sim = min_sim
   g = nx.Graph()
   ncount = 0
-  for edge, sim in tqdm.tqdm(Counter(cos_sims).most_common()):
+  for edge, sim in tqdm(Counter(cos_sims).most_common()):
     if edge[0]==edge[1]:
       continue
     if sim<best_sim:
@@ -827,7 +827,7 @@ clean=lambda x:x, pmi_smoothing=10,return_knn=False
     if w2vec_isinstalled:
         edge2sim = {}
         error= 0
-        for n,n2 in tqdm.tqdm(pmis):
+        for n,n2 in tqdm(pmis):
             try:
                 sim = 1-ent2v.wv.distance(n,n2)
             except:
@@ -860,7 +860,7 @@ clean=lambda x:x, pmi_smoothing=10,return_knn=False
         g.add_edge(n,n2,**{'w2vec_similarity':sim,'pmi':pmi,'count':count})
 
     edge2jacc = Counter()
-    for edge,_ in tqdm.tqdm(sort):
+    for edge,_ in tqdm(sort):
         n,n2 = edge
         d = set(g[n])
         d2 = set(g[n2])
@@ -888,12 +888,12 @@ clean=lambda x:x, pmi_smoothing=10,return_knn=False
         elif sorting_mechanism=='jaccard':
             wkey = 'jaccard_similarity'
         knn = nx.DiGraph()
-        for n in tqdm.tqdm(list(g)):
+        for n in tqdm(list(g)):
             for k,n2 in enumerate(sorted(g[n],key=lambda x: g[n][x][wkey])):
                 d = g[n][n2].copy()
                 d['k'] = k
                 knn.add_edge(n,n2,**d)
-        for n,n2 in tqdm.tqdm(g.edges()):
+        for n,n2 in tqdm(g.edges()):
             if knn.has_edge(n,n2):
                 k1 = knn[n][n2]['k']
             else:
