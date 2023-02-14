@@ -559,6 +559,7 @@ def prepare_docs(docs,clean=lambda x:x,filter_func=lambda x: not x,stem=False,re
         print('Not implemented yet, use custom clean function instead.')
     lans = []
     lan_count = Counter()
+    print('Doing language detection')
     for doc in tqdm(docs):
         if not type(doc)==str:
             temp = ' '.join(doc)
@@ -576,8 +577,9 @@ def prepare_docs(docs,clean=lambda x:x,filter_func=lambda x: not x,stem=False,re
                 lan = ld.detect(doc)
         if lan in trans_lans:
             lan = trans_lans[lan]
-        lans.append(lan)
+        lans.append(lan).
         lan_count[lan]+=1
+    print(lan_count.most_common(10))
     most_lan = lan_count.most_common(1)[0][0]
     resolver = Resolver(e2e={},clean=clean)
     if resolve_entities:
