@@ -1,4 +1,4 @@
-tqdm(import os
+import os
 __copyright__ = "Copyright (C) Snorre Ralund"
 __license__ = "Work in progress, please do not share or circulate"
 __version__ = 0.3
@@ -577,7 +577,7 @@ def prepare_docs(docs,clean=lambda x:x,filter_func=lambda x: not x,stem=False,re
                 lan = ld.detect(doc)
         if lan in trans_lans:
             lan = trans_lans[lan]
-        lans.append(lan).
+        lans.append(lan)
         lan_count[lan]+=1
     print(lan_count.most_common(10))
     most_lan = lan_count.most_common(1)[0][0]
@@ -653,14 +653,15 @@ def prepare_docs(docs,clean=lambda x:x,filter_func=lambda x: not x,stem=False,re
     for num,doc in enumerate(docs):
         lan = lans[num]
         if lan in languages:
-            dfreq = DFREQ[lan]
-            c = C[lan]
+            DFREQ[lan].update(set(doc))
+            C[lan].update(Counter(doc))
         else:
-            dfreq = DFREQ[most_lan]
-            c = C[most_lan]
+            DFREQ[most_lan].update(set(doc))
+
+            C[most_lan].update(Counter(doc))
             lan = most_lan
-        dfreq.update(set(doc))
-        c.update(Counter(doc))
+        dfreq = DFREQ[lan]
+        c = C[lan]
         count+=1
         if len(c)>max_tokens:
             logging.info('trimming %d %d %d'%(count,len(dfreq),len(c)))
@@ -684,10 +685,12 @@ def prepare_docs(docs,clean=lambda x:x,filter_func=lambda x: not x,stem=False,re
     for w,count in c2.most_common(max_tokens):
         pm = 0
         cm = 0
+        dm = 0
         best = most_lan
         for lan in C:
             lanc = lan_count[lan]
             count = C[lan][w]
+            d = DFREQ[lan][w]
             if count<4:
                 continue
             p = count/lanc
@@ -695,11 +698,12 @@ def prepare_docs(docs,clean=lambda x:x,filter_func=lambda x: not x,stem=False,re
                 pm = p
                 best = lan
                 cm = count
-        if pm ==0:
+                dm = d
+        if pm==0:
             continue
         w2lan[w] = (best,pm)
-        dfreq[w] = pm
-        c[w] = count
+        dfreq[w] = dm
+        c[w] = cm
     logging.info('done counting')
     if return_e2e:
         res_e2all = {e:[] for e in e2e.values()}
