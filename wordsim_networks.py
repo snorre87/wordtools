@@ -262,6 +262,7 @@ def build_graph_from_similarities(cos_sims,check_diff = 0.01,min_sim=False,induc
     if sim<=min_sim:
       if large_component_size:
         mindefined = True
+      best_sim = sim
       break
   stats = {'best_score':best_score,'cut':best_sim}
   print('Cut found here:',stats)
@@ -545,6 +546,7 @@ def trim_counter(c,max_tokens,p=0.75):
     nnew = int(max_tokens*p)
     c = Counter(dict(c.most_common(nnew)))
     return c
+from tqdm import tqdm_notebook as tqdm
 import langdetect as ld
 def prepare_docs(docs,clean=lambda x:x,filter_func=lambda x: not x,stem=False,resolve_entities=True,return_e2e=False,phrases=False,run_in_memory=True,max_tokens=150000,verbose=False,index_files=True,index_folder='temp_indexed/',max_lans=3,trans_lans = {'sv':'da','no':'da'},detector=False):
     """Function for preparing documents.
@@ -557,9 +559,8 @@ def prepare_docs(docs,clean=lambda x:x,filter_func=lambda x: not x,stem=False,re
         print('Not implemented yet, use custom clean function instead.')
     lans = []
     lan_count = Counter()
-    for doc in docs:
+    for doc in tqdm(docs):
         if not type(doc)==str:
-            logging.info(type(doc))
             temp = ' '.join(doc)
             if len(temp) ==0:
                 lan = ''
