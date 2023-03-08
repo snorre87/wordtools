@@ -44,11 +44,13 @@ class Connector():
       if overwrite_log==True:
         self.log = open(logfile,'w')
         self.log.write(';'.join(header))
+        self.log.flush()
       else:
         self.log = open(logfile,'a')
     else:
       self.log = open(logfile,'w')
       self.log.write(';'.join(header))
+      self.log.flush()
     ## load log
     self.log_df = self.load_log()
     self.id = len(self.log_df)
