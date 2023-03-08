@@ -130,5 +130,9 @@ class Connector():
     return None,None
   def load_log(self):
     import pandas as pd
-    df = pd.read_csv(self.logfilename,sep=';')
+    import os
+    if os.path.isfile(self.logfilename):
+        df = pd.read_csv(self.logfilename,sep=';')
+    else:
+        df = pd.DataFrame()
     return df
