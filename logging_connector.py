@@ -1,5 +1,5 @@
 import requests,os,time
-import codecs
+import codecs,pandas as pd
 def ratelimit(dt):
     "A function that handles the rate of your calls."
     time.sleep(dt) # sleep one second.
