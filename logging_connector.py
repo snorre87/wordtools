@@ -1,4 +1,5 @@
 import requests,os,time
+import codecs
 def ratelimit(dt):
     "A function that handles the rate of your calls."
     time.sleep(dt) # sleep one second.
@@ -62,7 +63,6 @@ class Connector():
     #    self.id = 0
     #  else:
     #    self.id = int(l[-1][0])+1
-
   def get(self,url,project_name,**getkwargs):
     """Method for connector reliably to the internet, with multiple tries and simple error handling, as well as default logging function.
     Input url and the project name for the log (i.e. is it part of mapping the domain, or is it the part of the final stage in the data collection).
@@ -131,10 +131,11 @@ class Connector():
       return None,call_id
     return None,None
   def load_log(self):
-    import pandas as pd
-    import os
-    if os.path.isfile(self.logfilename) and os.path.getsize(self.logfilename)>0:
-        df = pd.read_csv(self.logfilename,sep=';')
-    else:
-        df = pd.DataFrame()
-    return df
+      with codecs.open(self.logfilename,'r','utf-8') as f:
+          s = f.read()
+          l = s.split('\n')
+          header = l[0].split(';')
+          l = l[1:]
+          dat = [i.split(';',maxsplit=len(header)-1) for i in l]
+          log_df = pd.DataFrame(dat,columns=header)
+      return log_df
