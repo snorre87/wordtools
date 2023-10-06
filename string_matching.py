@@ -92,10 +92,17 @@ def string_match(a,a2,lower=True,minimum=80,one2one = False,measure='robust',ret
             trans[i] = list(g[i].keys())[0]
     else:
         temp = sim.groupby('str1').apply(lambda x: x.str2.values[0])
-        for i,j in temp.reset_index().values:
+        for i,j in dict(temp).items():#.reset_index().values:
             trans[i] = j
     if lower:
-        trans = {back[i]:back2[j] for i,j in trans.items()}
+        trans2 = {}
+        for i,j in trans.items():
+            if i in back[i]:
+                i = back[i]
+            if j in back2:
+                j = back2[j]
+            trans2[i] = j
+        trans = trans2
     if return_data:
         return trans,pd.DataFrame(dat)
     return trans
