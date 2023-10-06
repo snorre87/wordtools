@@ -97,7 +97,7 @@ def string_match(a,a2,lower=True,minimum=80,one2one = False,measure='robust',ret
             trans[i] = list(g[i].keys())[0]
     else:
         temp = sim.groupby('str1').apply(lambda x: x.str2.values[0])
-        for i,j in dict(temp).items():#.reset_index().values:
+        for i,j in temp.reset_index().values:
             trans[i] = j
     if lower:
         trans2 = {}
