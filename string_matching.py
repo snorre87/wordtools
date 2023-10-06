@@ -80,7 +80,12 @@ def string_match(a,a2,lower=True,minimum=80,one2one = False,measure='robust',ret
         return trans
     sim = sim[sim[measure]>=minimum]
     sim = sim.sort_values(measure,ascending=False)
-
+    if len(sim)==0:
+        if lower:
+            trans = {back[i]:back2[j] for i,j in trans.items()}
+        if return_data:
+            return trans,pd.DataFrame(dat)
+        return trans
     if one2one:
         g = nx.Graph()
         in_ = set()
