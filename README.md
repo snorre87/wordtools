@@ -20,3 +20,5 @@ An experimental method for computing co-occurence networks based on a pmi weight
 A connector for scraping that sets up simple logging for transparency and monitoring of data collection.
 ## plot_fit
 A script for plotting fitted lines.
+## explore_regex
+Small package for developing regular expressions. Allows you to inspect the context of the matches, and compare differences and similarities between regular expressions. 
