@@ -566,15 +566,24 @@ def prepare_docs(docs,clean=lambda x:x,filter_func=lambda x: not x,stem=False,re
             if len(temp) ==0:
                 lan = ''
             else:
-                if detector!=False:
-                    lan = detector(temp)
-                else:
-                    lan = ld.detect(temp)
+                try:
+                    if detector!=False:
+                        lan = detector(temp)
+                    else:
+                        lan = ld.detect(temp)
+                except:
+                    lan = ''
         else:
-            if detector!=False:
-                lan = detector(doc)
+            if len(temp) ==0:
+                lan = ''
             else:
-                lan = ld.detect(doc)
+                try:
+                    if detector!=False:
+                        lan = detector(doc)
+                    else:
+                        lan = ld.detect(doc)
+                except:
+                    lan = ''
         if lan in trans_lans:
             lan = trans_lans[lan]
         lans.append(lan)
