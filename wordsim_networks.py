@@ -1026,3 +1026,86 @@ def draw_network_quick(g,label_p=0.75,adjust_text=False,node_or_community_norm='
             print('Error')
 
     return fig
+
+## Induce sparsity by removing redudant edges (i.e. edges with more than k-shared-neighbors)
+def induce_sparsity_redundant_kshared(g_sparse,k_shared=4,sort_col='weight'):
+  g = g_sparse.copy()
+  edges = sorted(g.edges(data=True),key=lambda x: x[2][sort_col])
+  redundant = []
+  for i,j,d in edges:
+    n,n2 = set(g[i]),set(g[j])
+    o = len(n&n2)
+    if o>=k_shared:
+      redundant.append((i,j))
+      g.remove_edge(i,j)
+  print(len(g.edges()),len(g_sparse.edges()),len(redundant))
+  return g
+
+### Induce sparsity via knearestneighbor pruning.
+def induce_sparsity_knearest(g_sparse,max_k=7):
+  # define add k_near_edge
+  import networkx as nx
+  g = g_sparse.copy()
+  comps = sorted(list(nx.connected_components(g)),key=len,reverse=True)
+  print(len(comps),max_k)
+  for n in g_sparse:
+    ns = g_sparse[n]
+    ns = sorted(ns,key=lambda x: g_sparse[n][x]['weight'],reverse=True)
+    for num,i in enumerate(ns[:max_k]):
+      edge = sorted((n,i))
+      g[n][i]['k_near_%d'%edge.index(n)] = num
+    #for num,i in enumerate(ns[max_k:]):
+    #  edge = tuple(sorted((n,i)))
+  # remove edges that are not k_near
+  removed = set()
+  for i,j,d in list(g.edges(data=True)):
+    if 'k_near_0' in d:
+      continue
+    if 'k_near_1' in d:
+      continue
+    g.remove_edge(i,j)
+    removed.add((i,j))
+  # NOTE: One could iterate to remove edges in an undirected fashion
+  comps = sorted(list(nx.connected_components(g)),key=len,reverse=True)
+  print(len(comps))
+  print(len(g.edges()),len(g_sparse.edges()),len(removed))
+  for i,j in g.edges():
+    g[i][j]['edge_type'] = 'original'
+  return g
+### Connect components via best route
+def connect_components(cos_sims,g,comp_size_min = 10,k_connectors = 2):
+  cos_sims = Counter(cos_sims)
+  ## comp count
+  g = g.copy()
+  while True:
+    print('-',end='')
+    comps = sorted(list(nx.connected_components(g)),key=len,reverse=True)
+    largest = nx.subgraph(g,comps[0])
+    lens = list(map(len,comps))
+    if len(lens)==1:
+      break
+    if max(lens[1:])<comp_size_min:
+      break
+    no_more_comps = False
+    for comp in comps[1:]:
+      inter_edges = []
+      if no_more_comps:
+        break
+      if len(comp)<comp_size_min:
+        no_more_comps = True
+        break
+      else:
+        for i in comp:
+          for j in largest:
+            edge = tuple(sorted((i,j)))
+            score = cos_sims[edge]
+            if score>0:
+                inter_edges.append((score,i,j))
+        if len(inter_edges)>0:
+          break
+    inter_edges = sorted(inter_edges)
+    for score,i,j in inter_edges[:k_connectors]:
+      g.add_edge(i,j,**{'weight':score,'edge_type':'connector'})
+    if len(inter_edges)==0:
+      break
+  return g
