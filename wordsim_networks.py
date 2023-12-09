@@ -724,6 +724,33 @@ def prepare_docs(docs,clean=lambda x:x,filter_func=lambda x: not x,stem=False,re
                 res_e2all[res].append(e)
         return docs,c,dfreq,w2lan,lan_count,(e2e,res_e2all)
     return docs,c,dfreq,w2lan,lan_count
+def calculate_pmi(edge_c,c,n_docs,alpha=10,min_edgecount=5,w2lan=False,lan_count=False,pmi_min=1.1,return_out=True):
+    out = []
+    pmis = {}
+    for edge,count in edge_c.items():
+        n,n2 = edge
+        if count<min_edgecount:
+            out.append(edge)
+            continue
+        try:
+            l1,l2 = w2lan[n][0],w2lan[n2][0]
+        except:
+            l1,l2 = '',''
+        try:
+            nd1,nd2 = lan_count[l1],lan_count[l2]
+        except:
+            nd1,nd2 = n_docs,n_docs
+        p = (c[n]+alpha)/nd1
+        p2 = (c[n2]+alpha)/nd2
+        m = count/n_docs
+        pmi = m/(p*p2)
+        if pmi<=pmi_min:
+            continue
+        pmis[edge] = pmi
+    pmis = Counter(pmis)
+    if return_out:
+        return pmis,out
+    return pmis
 def calculate_pmi_scores(docs,w2lan,lan_count,custom_filter=lambda x: not x,c=False,min_cut=10,max_frac=0.25,min_edgecount=5,max_edges=5000000,maximum_nodes=10000,pmi_min=1.2,remove_self_edges=True,edge_window=64,pmi_smoothing=10):
     logging.info('Calculate pmi')
     cut = min_cut
@@ -756,24 +783,8 @@ def calculate_pmi_scores(docs,w2lan,lan_count,custom_filter=lambda x: not x,c=Fa
             #edge_c = Counter(dict(edge_c.most_common(nnew)))
     logging.info('Done counting edges')
     print('Done counting edges')
-    pmis = {}
-    alpha = pmi_smoothing # smoothing term
-    out = []
-    for edge,count in edge_c.items():
-        n,n2 = edge
-        if count<min_edgecount:
-            out.append(edge)
-            continue
-        l1,l2 = w2lan[n][0],w2lan[n2][0]
-        nd1,nd2 = lan_count[l1],lan_count[l2]
-        p = (c[n]+alpha)/nd1
-        p2 = (c[n2]+alpha)/nd2
-        m = count/n_docs
-        pmi = m/(p*p2)
-        if pmi<=pmi_min:
-            continue
-        pmis[edge] = pmi
-    pmis = Counter(pmis)
+    #pmis,out = calculate_pmis(edge_count,alpha=pmi_smoothing,min_edgecount)
+    pmis,out = calculate_pmis(edge_c,c,n_docs,alpha=pmi_smoothing,min_edgecount=min_edgecount,w2lan=w2lan,lan_count=lan_count,pmi_min=pmi_min)
     for edge in out:
         del edge_c[edge]
     print('PMI done.')
