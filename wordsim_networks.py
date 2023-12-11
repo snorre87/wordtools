@@ -1121,7 +1121,7 @@ def add_relative_feature(g,col,com_col,out_name=False):
     except:
       communities[d[com_col]] = [i]
   for com,l in communities.items():
-    counts = np.array([c[i] for i in l])
+    counts = np.array([g.nodes[i][col] for i in l])
     m,ma = counts.mean(),counts.max()
     rel_counts = counts/ma
     std = counts.std()
