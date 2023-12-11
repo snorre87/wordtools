@@ -1132,3 +1132,20 @@ def add_relative_feature(g,col,com_col,out_name=False):
         g.nodes[n][out_name] = rel_counts
         g.nodes[n]['%s_m'%out_name] = rel_counts2
   return g
+
+def add_subcommunities(g):
+  g = g.copy()
+  com = {}
+  for n in g:
+    co = g.nodes[n]['community']
+    try:
+      com[co].append(n)
+    except:
+      com[co] = [n]
+  for co in com.values():
+    comp = nx.subgraph(g,co)
+    comp = sim_net.find_communities(comp)
+    for n,d in comp.nodes(data=True):
+      co = d['community_infomap']
+      g.nodes[n]['sub_community'] = co
+  return g
