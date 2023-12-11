@@ -1109,3 +1109,26 @@ def connect_components(cos_sims,g,comp_size_min = 10,k_connectors = 2):
     if len(inter_edges)==0:
       break
   return g
+
+def add_relative_feature(g,col,com_col,out_name=False):
+  g = g.copy()
+  communities = {}
+  if out_name==False:
+    out_name = 'relative_%s'%col
+  for i,d in g.nodes(data=True):
+    try:
+      communities[d[com_col]].append(i)
+    except:
+      communities[d[com_col]] = [i]
+  for com,l in communities.items():
+    counts = np.array([c[i] for i in l])
+    m,ma = counts.mean(),counts.max()
+    rel_counts = counts/ma
+    std = counts.std()
+    rel_counts2= (counts-m)/std
+    rel_counts2 -=min(rel_counts2)
+    rel_counts2 +=1
+    for n,rel_counts,rel_counts2 in zip(l,rel_counts,rel_counts2):
+        g.nodes[n][out_name] = rel_counts
+        g.nodes[n]['%s_m'%outname] = rel_counts2
+  return g
