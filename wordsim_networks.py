@@ -1130,5 +1130,5 @@ def add_relative_feature(g,col,com_col,out_name=False):
     rel_counts2 +=1
     for n,rel_counts,rel_counts2 in zip(l,rel_counts,rel_counts2):
         g.nodes[n][out_name] = rel_counts
-        g.nodes[n]['%s_m'%outname] = rel_counts2
+        g.nodes[n]['%s_m'%out_name] = rel_counts2
   return g
