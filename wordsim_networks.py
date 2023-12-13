@@ -1142,10 +1142,14 @@ def add_subcommunities(g):
       com[co].append(n)
     except:
       com[co] = [n]
+  count = 0
   for co in com.values():
     comp = nx.subgraph(g,co)
     comp = sim_net.find_communities(comp)
+    coms = []
     for n,d in comp.nodes(data=True):
       co = d['community_infomap']
-      g.nodes[n]['sub_community'] = co
+      g.nodes[n]['sub_community'] = count+co
+      coms.append(co)
+    count+=max(coms)
   return g
