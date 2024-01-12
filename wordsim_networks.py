@@ -784,7 +784,7 @@ def calculate_pmi_scores(docs,w2lan,lan_count,custom_filter=lambda x: not x,c=Fa
     logging.info('Done counting edges')
     print('Done counting edges')
     #pmis,out = calculate_pmis(edge_count,alpha=pmi_smoothing,min_edgecount)
-    pmis,out = calculate_pmis(edge_c,c,n_docs,alpha=pmi_smoothing,min_edgecount=min_edgecount,w2lan=w2lan,lan_count=lan_count,pmi_min=pmi_min)
+    pmis,out = calculate_pmi(edge_c,c,n_docs,alpha=pmi_smoothing,min_edgecount=min_edgecount,w2lan=w2lan,lan_count=lan_count,pmi_min=pmi_min)
     for edge in out:
         del edge_c[edge]
     print('PMI done.')
