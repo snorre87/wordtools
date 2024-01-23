@@ -73,7 +73,7 @@ def run_w2vec(texts,emb_size=False,known_phrases=[], return_phrased=False,return
     #print(w2v.corpus_count)
     w2v.train(new_docs,total_words = count,epochs=iter_)
 
-    if return_phrased:
+    if return_phrased==True:
         if return_counter:
             return w2v,docs,phrase_docs_bi,phrase_docs,ws
         else:
