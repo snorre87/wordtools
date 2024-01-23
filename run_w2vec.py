@@ -77,9 +77,9 @@ def run_w2vec(texts,emb_size=False,known_phrases=[], return_phrased=False,return
         if return_counter:
             return w2v,docs,phrase_docs_bi,phrase_docs,ws
         else:
-             w2v,docs,phrase_docs_bi,phrase_docs
+             return w2v,docs,phrase_docs_bi,phrase_docs
     if return_counter:
-        w2v,ws
+        return w2v,ws
     return w2v
 
 def process_document(text,tokenizer = nltk.tokenize.word_tokenize):
