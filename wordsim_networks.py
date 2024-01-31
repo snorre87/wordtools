@@ -8,14 +8,16 @@ import matplotlib.pyplot as plt
 try:
     import networkx as nx
 except:
-    inp = input('The networkx module is not installed. Do you want to install? Press y. Can work without.')
+    inp = 'y'
+    #inp = input('The networkx module is not installed. Do you want to install? Press y. Can work without.')
     if inp =='y':
         os.system('pip install networkx')
         import networkx as nx
 try:
     import community
 except:
-    inp = input('The community module is not installed. Do you want to install? Press y. Can work without.')
+    inp = 'y'
+    #inp = input('The community module is not installed. Do you want to install? Press y. Can work without.')
     if inp =='y':
         os.system(
         'pip install python-louvain')
@@ -23,7 +25,8 @@ except:
 try:
     import pyvis
 except:
-    inp = input('The pyvis module is not installed. Do you want to install? Press y. Used for interactive network visualization.')
+    inp = 'y'
+    #inp = input('The pyvis module is not installed. Do you want to install? Press y. Used for interactive network visualization.')
     if inp =='y':
         os.system(
         'pip install pyvis')
@@ -32,7 +35,8 @@ try:
     import infomap
 except:
     pass
-    inp = input('The infomap community module is not installed. Do you want to install? Press y. Can work without.')
+    inp = 'y'
+    #inp = input('The infomap community module is not installed. Do you want to install? Press y. Can work without.')
     if inp =='y':
         os.system(
         'pip install infomap')
