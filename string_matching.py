@@ -39,7 +39,7 @@ def get_fuzz_scores(str1,str2,lower=True):
     all_ = (lev+token_sort_ratio+partial)/3
     return {'partial':partial,'levensthein':lev,'token_sort':token_sort_ratio,'robust':all_,'str1':Str1,'str2':Str2}
 
-def get_similarities(a,a2,lower=True,match_criteria=match_criteria):
+def get_similarities(a,a2,lower=True,match_criteria=False):
     a,a2 = set(a),set(a2)
     if lower:
         new,new2 = set([i.lower() for i in a]),set([i.lower() for i in a2])
