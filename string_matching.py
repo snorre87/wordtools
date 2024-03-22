@@ -61,7 +61,7 @@ def get_similarities(a,a2,lower=True,match_criteria=False):
                     dat.append(d)
     return dat,common
 def string_match(a,a2,lower=True,minimum=80,one2one = False,measure='robust',return_data=False,match_criteria=False ):
-    dat,common = get_similarities(a,a2,lower=lower,match_criteria)
+    dat,common = get_similarities(a,a2,lower=lower,match_criteria=match_criteria)
     if lower:
         back = {}
 
