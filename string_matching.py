@@ -39,11 +39,11 @@ def get_fuzz_scores(str1,str2,lower=True):
     all_ = (lev+token_sort_ratio+partial)/3
     return {'partial':partial,'levensthein':lev,'token_sort':token_sort_ratio,'robust':all_,'str1':Str1,'str2':Str2}
 
-def get_similarities(a,a2,lower=True):
+def get_similarities(a,a2,lower=True,match_criteria=match_criteria):
     a,a2 = set(a),set(a2)
     if lower:
         new,new2 = set([i.lower() for i in a]),set([i.lower() for i in a2])
-        return get_similarities(new,new2,lower=False)
+        return get_similarities(new,new2,lower=False,match_criteria=match_criteria)
     common = set()
     dat = []
     for i in tqdm.tqdm(a):
@@ -51,12 +51,17 @@ def get_similarities(a,a2,lower=True):
             common.add(i)
             continue
         for j in a2:
-            d = get_fuzz_scores(i.replace('_',' '),j.replace('_',' '))
-            dat.append(d)
+            if match_criteria==False:
 
+                d = get_fuzz_scores(i.replace('_',' '),j.replace('_',' '))
+                dat.append(d)
+            else:
+                if match_criteria(i,j):
+                    d = get_fuzz_scores(i.replace('_',' '),j.replace('_',' '))
+                    dat.append(d)
     return dat,common
-def string_match(a,a2,lower=True,minimum=80,one2one = False,measure='robust',return_data=False):
-    dat,common = get_similarities(a,a2,lower=True)
+def string_match(a,a2,lower=True,minimum=80,one2one = False,measure='robust',return_data=False,match_criteria=False ):
+    dat,common = get_similarities(a,a2,lower=lower,match_criteria)
     if lower:
         back = {}
 
