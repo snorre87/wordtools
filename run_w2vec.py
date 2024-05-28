@@ -26,13 +26,14 @@ def run_w2vec(texts,emb_size=False,known_phrases=[], return_phrased=False,return
         print('Tokenizing...')
     else:
         docs = texts
-    if phrases:
+    if phrases==True:
         print('Locating collocations...')
         phrase_model_bi = Phrases(docs)
 
         phrase_docs_bi = [phrase_model_bi[sent] for sent in docs]
         phrase_model = Phrases(phrase_docs_bi)
         phrase_docs = [phrase_model[sent] for sent in phrase_docs_bi]
+
     # train w2v
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
     ############
@@ -53,11 +54,12 @@ def run_w2vec(texts,emb_size=False,known_phrases=[], return_phrased=False,return
         for doc in docs:
             count+=len(doc)
         emb_size = calculate_w2vec_size(count)
-    if phrases:
+    if phrases==True:
         new_docs = docs+phrase_docs_bi+phrase_docs
     else:
-        new_docs = docs
+        new_docs = docs.copy()
     random.shuffle(new_docs)
+    count = 0
     for i in new_docs:
         count+=len(i)
         for w in i:
