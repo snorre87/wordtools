@@ -12,7 +12,7 @@ import numpy as np
 def calculate_w2vec_size(count):
   count = count/1000000
   base_size = 64
-  return int(min(max(32,base_size*(int(np.log2(count)-1))),256))
+  return int(min(max(64,base_size*(int(np.log2(count)-1))),256))
 
 def replace_phrases(text,phrases):
     for i in phrases:
@@ -54,6 +54,7 @@ def run_w2vec(texts,emb_size=False,known_phrases=[], return_phrased=False,return
         for doc in docs:
             count+=len(doc)
         emb_size = calculate_w2vec_size(count)
+
     if phrases==True:
         new_docs = docs+phrase_docs_bi+phrase_docs
     else:
@@ -69,9 +70,11 @@ def run_w2vec(texts,emb_size=False,known_phrases=[], return_phrased=False,return
     min_words = 2000000
     iter_ = min_words//count
     iter_ = max(iter_,3)
-    w2v = Word2Vec(vector_size=int(size),workers=workers,negative=10,window=window,min_count=min_count) # max_final_vocab = max_words
+    print('Training with %d embedding'%emb_size)
+    w2v = Word2Vec(vector_size=int(emb_size),workers=workers,negative=10,window=window,min_count=min_count) # max_final_vocab = max_words
     w2v.build_vocab_from_freq(ws)
-    print('Getting ready to train')
+    print('Getting ready to train> %d iterations'%iter_)
+
     #print(w2v.corpus_count)
     w2v.train(new_docs,total_words = count,epochs=iter_)
 
