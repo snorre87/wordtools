@@ -427,6 +427,9 @@ class DocsIter():
             if os.path.isfile(self.folder+'%d.pkl'%self.index_i):
                 self.current_index_list = pickle.load(open(self.folder+'%d.pkl'%self.index_i,'rb'))
                 l = self.current_index_list
+                if len(l)==0:
+                    self.n_docs = self.i+1
+                    raise StopIteration
             else:
                 self.n_docs = self.i+1
                 raise StopIteration
