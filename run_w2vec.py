@@ -8,6 +8,7 @@ from collections import Counter
 import random
 import nltk
 nltk.download('punkt')
+nltk.download('punkt_tab')
 import numpy as np
 def calculate_w2vec_size(count):
   count = count/1000000
@@ -163,3 +164,4 @@ def run_entropy(bow,path):
         ents.append(ent)
     ents = np.array(ents)
     pickle.dump(ents,open(path+'entropy_w','wb'))
+
